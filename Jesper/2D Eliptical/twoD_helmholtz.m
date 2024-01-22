@@ -5,6 +5,8 @@ ldof = numel(x);
 ke = zeros(me_Gauss);
 me = zeros([me_Gauss,1]);
 L = x(end)-x(1);
+D = 1111;
+
 
 
 N=me_Gauss-1;
