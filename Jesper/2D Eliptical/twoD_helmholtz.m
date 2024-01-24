@@ -20,22 +20,20 @@ end
 gradl = zeros([n_gll,n_gll,n_gll,n_gll,2]);
 kroen = eye(n_gll,n_gll);
 
+%Calculate the gradient operator of the test function. 4th order tensor
+%with 2 spatial components
 for p=1:n_gll
     for q = 1:n_gll
         for m=1:n_gll
             for n = 1:n_gll
                 gradl(p,q,m,n,:) = [ys(p,q)*dl(p,m)*kroen(q,n)-yr(p,q)*kroen(p,m)*dl(q,n)
-                                    xr(p,q)*kroen(p,m)*dl(q,n)-xs(p,q)*dl(p,m)*kroen(q,n)];
+                    xr(p,q)*kroen(p,m)*dl(q,n)-xs(p,q)*dl(p,m)*kroen(q,n)];
             end
         end
     end
 end
 
-
-
-%Calculate contributions to the jacobian.
-
-
+%Compute ke and me.
 for i = 1:n_gll
     for j = 1:n_gll
         for m = 1:n_gll
@@ -44,11 +42,14 @@ for i = 1:n_gll
                 col = (m-1)*n_gll + n;
                 for p = 1:n_gll
                     for q=1:n_gll
+
                         ke(row,col) =ke(row,col) + w(p)*w(q)*(1/dJ(p,q))*dot(gradl(p,q,i,j,:),gradl(p,q,m,n,:));
+
                     end
                 end
 
                 me(row,col) = w(i)*w(j)*abs(dJ(i,j))*kroen(i,m)*kroen(j,n);
+
             end
         end
     end
@@ -91,6 +92,7 @@ end
 end
 
 function dl = dlagrange(xi_vec,N,k,i)
+%The derivative of the ith lagrange polynomial to the kth xi.
 dl = 0;
 for j=1:N+1
     dij = dij_calc(N,xi_vec([i,j]),i-1,j-1);
@@ -99,7 +101,6 @@ for j=1:N+1
 end
 
 end
-
 function [l]=cardinalP(x,i,t)
 
 l=ones(size(t)); % Accepting both a row vector and a column vector
@@ -114,6 +115,7 @@ end
 end
 
 function [dJ,xr,xs,yr,ys] = Jac2D(x,y,dl,N)
+%Calculated according to Rønquist (2.xx)
 xr = zeros(N+1,N+1);xs = xr;yr = xr; ys = xr; % Initialize vectors
 for p = 1:N+1
     for q=1:N+1

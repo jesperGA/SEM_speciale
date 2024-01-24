@@ -31,12 +31,36 @@ for e = 3:4
 
 end
 
-figure()
+bound_nodes = iglob(1,:,[1,3]);
+mesh.bound = [bound_nodes(:),ones(numel(bound_nodes),1),zeros(numel(bound_nodes),1)];
+
+
+% figure()
 % plotmesh(iglob,xN,yN)
 mesh.IX = iglob;
 mesh.X = [ones(length(xN),1),xN,yN]; %Save grid to mesh-struct
 opt = [];
 [opt,study] = AssemblyQuad(mesh,opt,study);
+
+%%
+%SOLVE MED OG OPRET BOUNDARIES:
+    % % Modidy stiffness matrix for BCs
+    % opt.K = opt.Null'*opt.K*opt.Null - (opt.Null-speye(size(opt.Null)));
+    % opt.P = opt.Null*opt.P;
+    % 
+    % % Solve static problem
+    % tic;
+    % opt.U = opt.K \ opt.P;
+    %%
+
+x = linspace(0,1);
+y = linspace(0,1.25);
+[X,Y] = meshgrid(x,y);
+
+sol = sin(X).*exp(-y);
+
+figure()
+surf(X,Y,sol)
 
 % end
 
