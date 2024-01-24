@@ -1,54 +1,64 @@
-function [A,B] = elementMatrix2D(x,y,xis,w,h,N);
+function [A,B] = elementMatrix2D(x,y,xis,w,D,N);
 
-    ldof=(N+1)^2*2;
+    ldof=(N+1)^2;
     A = zeros(ldof,ldof);
     B = zeros(ldof,ldof);
     % fe = zeros(ldof,1);
+    % 
+    % 
+    % xr = zeros(N+1,N+1);
+    % xs = zeros(N+1,N+1);
+    % yr = zeros(N+1,N+1);
+    % ys = zeros(N+1,N+1);
+    % J = zeros(2,2);
+    % 
+    % for i = 1:N+1
+    %     xi = xis(i);
+    %     for j = 1:N+1
+    %        eta = xis(j);
+    %       [J,N] = shapeFunc(x,y,eta,xi);
+    %        Bb(1:3,:) = Bm(1:3,:);
+    %        dJ = det(J);
+    %        kb = kb+Bb'*Dm*Bb*kbw(i)*kbw(j)*dJ;
+    %        fe = fe + N(1,:)'*q*kbw(i)*kbw(j)*dJ;
+    %     end
+    % end
+    % 
+    % for p = 1:N+1
+    %     for q = 1:N+1
+    %         for m = 1:N+1
+    %             xr(p,q) = xr(p,q) + h(p,m)*x(m,q);
+    %             xs(p,q) = xs(p,q) + h(q,m)*x(p,m);
+    %             yr(p,q) = yr(p,q) + h(p,m)*y(m,q);
+    %             ys(p,q) = ys(p,q) + h(q,m)*y(p,m);
+    %         end
+    %         J(p,q) = xr(p,q)*ys(p,q) - xs(p,q)*yr(p,q);
+    %     end
+    % end
+    % 
+    % % Initialize element matrices
+    % A = zeros(N+1, N+1);
+    % B = zeros(N+1, N+1);
+    % J = (x(end)-x(1))/2;
+    % k=1
 
-
-    xr = zeros(N+1,N+1);
-    xs = zeros(N+1,N+1);
-    yr = zeros(N+1,N+1);
-    ys = zeros(N+1,N+1);
-    J = zeros(2,2);
-
-    for i = 1:N+1
-        xi = xis(i);
-        for j = 1:N+1
-           eta = xis(j);
-          [J,N] = shapeFunc(x,y,eta,xi);
-           Bb(1:3,:) = Bm(1:3,:);
-           dJ = det(J);
-           kb = kb+Bb'*Dm*Bb*kbw(i)*kbw(j)*dJ;
-           fe = fe + N(1,:)'*q*kbw(i)*kbw(j)*dJ;
-        end
-    end
-
-    for p = 1:N+1
-        for q = 1:N+1
-            for m = 1:N+1
-                xr(p,q) = xr(p,q) + h(p,m)*x(m,q);
-                xs(p,q) = xs(p,q) + h(q,m)*x(p,m);
-                yr(p,q) = yr(p,q) + h(p,m)*y(m,q);
-                ys(p,q) = ys(p,q) + h(q,m)*y(p,m);
-            end
-            J(p,q) = xr(p,q)*ys(p,q) - xs(p,q)*yr(p,q);
-        end
-    end
-
-    % Initialize element matrices
-    A = zeros(N+1, N+1);
-    B = zeros(N+1, N+1);
-    J = (x(end)-x(1))/2;
-
+    % for i = 1 : N+1
+    %     for j = 1 : N+1
+    %             dlj_xi_i(i,j) = DerivativeLagrangePoly(N, xis, i, j);
+    %     end
+    % end
+    % [xis,w,h]=GetGLL(N+1)
+    % [x,w]=lglnodes(N)
+    % dlj_xi_i
+    % 
     % for i = 1 : N+1
     %     for j = 1 : N+1
     %         d=i==j; % Kronecker delta
     %         B(i,j) = B(i,j) + w(j) * J * d;
     %         for k = 1 : N+1
-    %             dli_xi_k = DerivativeLagrangePoly(N, xi, k, i);
-    %             dlj_xi_k = DerivativeLagrangePoly(N, xi, k, j);
-    %             A(i,j) = A(i,j) + exp(x(1)+(xi(k)+1)*J) * w(k) * dlj_xi_k * dli_xi_k * 1 / J;
+    %             dli_xi_k = DerivativeLagrangePoly(N, xis, k, i)
+    %             dlj_xi_k = DerivativeLagrangePoly(N, xis, k, j);
+    %             A(i,j) = A(i,j) + exp(x(1)+(xis(k)+1)*J) * w(k) * dlj_xi_k * dli_xi_k * 1 / J;
     %         end
     %     end
     % end

@@ -1,8 +1,8 @@
 % Assuming the dimensions of the tensor A
-I = 2;  % Example value for I
-J = 2;  % Example value for J
-M = 2;  % Example value for M
-N = 2;  % Example value for N
+I = 3;  % Example value for I
+J = 3;  % Example value for J
+M = 3;  % Example value for M
+N = 3;  % Example value for N
 
 % Initialize a cell array to store the strings
 A_strings = cell(I*J, M*N);
@@ -25,10 +25,6 @@ end
 
 % Display the resulting array of strings
 disp(A_strings);
-
-% Assuming the dimensions for U
-M = 2;  % Example value for M
-N = 2;  % Example value for N
 
 % Initialize a cell array to store the strings for U
 U_strings = cell(M*N, 1);

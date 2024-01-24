@@ -21,7 +21,7 @@ addpath('PLOT')
 %**** Set here the parameters of the square box domain and mesh : ****
 LX=1;	% side-length
 NELX = 2; % number of elements along each side
-study.N = 4; % polynomial degree (inside each element, along each direction)
+study.N = 1; % polynomial degree (inside each element, along each direction)
 %********
 
 LY=LX;
@@ -40,15 +40,15 @@ NGLL = study.N+1; % number of GLL nodes per element
 node_coordinates = [x, y];
 node_numbers = 1:size(node_coordinates, 1);
 
-element_nodes = [mesh.IX(:, :, 3),mesh.IX(:, :, 4)];
-xx = node_coordinates(element_nodes, 1);
-yy = node_coordinates(element_nodes, 2);
-ratios = 1 + 1/4 * sinpi(xx(yy==1))./(1/2);
-yy(yy==yy(21)) = 1/2+(yy(yy==yy(21))-1/2).*ratios;    
-yy(yy==yy(16)) = 1/2+(yy(yy==yy(16))-1/2).*ratios;    
-yy(yy==yy(11)) = 1/2+(yy(yy==yy(11))-1/2).*ratios;
-yy(yy==yy(6)) = 1/2+(yy(yy==yy(6))-1/2).*ratios;
-node_coordinates(element_nodes, 2) = yy;
+% element_nodes = [mesh.IX(:, :, 3),mesh.IX(:, :, 4)];
+% xx = node_coordinates(element_nodes, 1);
+% yy = node_coordinates(element_nodes, 2);
+% ratios = 1 + 1/4 * sinpi(xx(yy==1))./(1/2);
+% yy(yy==yy(21)) = 1/2+(yy(yy==yy(21))-1/2).*ratios;    
+% yy(yy==yy(16)) = 1/2+(yy(yy==yy(16))-1/2).*ratios;    
+% yy(yy==yy(11)) = 1/2+(yy(yy==yy(11))-1/2).*ratios;
+% yy(yy==yy(6)) = 1/2+(yy(yy==yy(6))-1/2).*ratios;
+% node_coordinates(element_nodes, 2) = yy;
 
 
 % Plot nodes
@@ -102,4 +102,5 @@ mesh.bound = [2 0 0];
 hold off;
 
 
+opt = Controller(mesh, study);
 

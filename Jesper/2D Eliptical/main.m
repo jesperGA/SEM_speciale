@@ -32,7 +32,7 @@ for e = 3:4
 end
 
 figure()
-plotmesh(iglob,xN,yN)
+% plotmesh(iglob,xN,yN)
 mesh.IX = iglob;
 mesh.X = [ones(length(xN),1),xN,yN]; %Save grid to mesh-struct
 opt = [];

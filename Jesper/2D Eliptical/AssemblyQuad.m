@@ -2,7 +2,7 @@ function [opt,study] = AssemblyQuad(mesh,opt,study)
 
 n_GLL = study.n_GLL; %Specify number of GLL points
 N = n_GLL-1;
-ldof =(n_GLL^2)*2;
+ldof =(n_GLL^2);
 
 opt.nel = size(mesh.IX,3);
 opt.neqn = size(mesh.X,1)*2;
@@ -20,7 +20,6 @@ w = study.w;
 xi = study.xi;
 
 for e = 1:opt.nel
-    e
 
     nen = mesh.IX(:,:,e);
     nen = nen(:);
@@ -43,9 +42,9 @@ for e = 1:opt.nel
     % matID = mesh.IX(e,end);
 
 
-    [~,~] = twoD_helmholtz(x,y,[],[],n_GLL,w,xi);
+    [me,ke] = twoD_helmholtz(x,y,[],[],n_GLL,w,xi);
 
-
+    disp('test')
 %     for krow = 1:ldof
 %         for kcol = 1:ldof
 %             ntriplets = ntriplets+1;
