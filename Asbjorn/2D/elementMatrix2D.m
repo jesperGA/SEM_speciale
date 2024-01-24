@@ -1,67 +1,67 @@
 function [A,B] = elementMatrix2D(x,y,xis,w,D,N);
 
+    x = flipud(fliplr(x));
+    y = flipud(fliplr(y));
     ldof=(N+1)^2;
-    A = zeros(ldof,ldof);
-    B = zeros(ldof,ldof);
+    A = zeros(N+1,N+1,N+1,N+1);
+    B = zeros(N+1,N+1,N+1,N+1);
+    grad = zeros(N+1,N+1,N+1,N+1,2);
+
+
     % fe = zeros(ldof,1);
     % 
     % 
-    % xr = zeros(N+1,N+1);
-    % xs = zeros(N+1,N+1);
-    % yr = zeros(N+1,N+1);
-    % ys = zeros(N+1,N+1);
-    % J = zeros(2,2);
-    % 
-    % for i = 1:N+1
-    %     xi = xis(i);
-    %     for j = 1:N+1
-    %        eta = xis(j);
-    %       [J,N] = shapeFunc(x,y,eta,xi);
-    %        Bb(1:3,:) = Bm(1:3,:);
-    %        dJ = det(J);
-    %        kb = kb+Bb'*Dm*Bb*kbw(i)*kbw(j)*dJ;
-    %        fe = fe + N(1,:)'*q*kbw(i)*kbw(j)*dJ;
-    %     end
-    % end
-    % 
-    % for p = 1:N+1
-    %     for q = 1:N+1
-    %         for m = 1:N+1
-    %             xr(p,q) = xr(p,q) + h(p,m)*x(m,q);
-    %             xs(p,q) = xs(p,q) + h(q,m)*x(p,m);
-    %             yr(p,q) = yr(p,q) + h(p,m)*y(m,q);
-    %             ys(p,q) = ys(p,q) + h(q,m)*y(p,m);
-    %         end
-    %         J(p,q) = xr(p,q)*ys(p,q) - xs(p,q)*yr(p,q);
-    %     end
-    % end
-    % 
-    % % Initialize element matrices
-    % A = zeros(N+1, N+1);
-    % B = zeros(N+1, N+1);
-    % J = (x(end)-x(1))/2;
-    % k=1
+    xr = zeros(N+1,N+1);
+    xs = zeros(N+1,N+1);
+    yr = zeros(N+1,N+1);
+    ys = zeros(N+1,N+1);
+    J = zeros(2,2);
 
-    % for i = 1 : N+1
-    %     for j = 1 : N+1
-    %             dlj_xi_i(i,j) = DerivativeLagrangePoly(N, xis, i, j);
-    %     end
-    % end
-    % [xis,w,h]=GetGLL(N+1)
-    % [x,w]=lglnodes(N)
-    % dlj_xi_i
-    % 
-    % for i = 1 : N+1
-    %     for j = 1 : N+1
-    %         d=i==j; % Kronecker delta
-    %         B(i,j) = B(i,j) + w(j) * J * d;
-    %         for k = 1 : N+1
-    %             dli_xi_k = DerivativeLagrangePoly(N, xis, k, i)
-    %             dlj_xi_k = DerivativeLagrangePoly(N, xis, k, j);
-    %             A(i,j) = A(i,j) + exp(x(1)+(xis(k)+1)*J) * w(k) * dlj_xi_k * dli_xi_k * 1 / J;
-    %         end
-    %     end
-    % end
+
+    for p = 1:N+1
+        for q = 1:N+1
+            for m = 1:N+1
+                xr(p,q) = xr(p,q) + D(p,m)*x(m,q);
+                xs(p,q) = xs(p,q) + D(q,m)*x(p,m);
+                yr(p,q) = yr(p,q) + D(p,m)*y(m,q);
+                ys(p,q) = ys(p,q) + D(q,m)*y(p,m);
+            end
+            % J(p,q) = xr(p,q)*ys(p,q) - xs(p,q)*yr(p,q);
+        end
+    end
+    J = xr.*ys - xs.*yr;
+
+    for p = 1:N+1
+        for q = 1:N+1
+            for m = 1:N+1
+                for n = 1:N+1
+                    d_qn=q==n; % Kronecker delta
+                    d_pm=q==n; % Kronecker delta
+                    grad(p,q,m,n,1) = ys(p,q) * D(p,m) * d_qn - yr(p,q) * d_pm * D(q,n);
+                    grad(p,q,m,n,2) = xr(p,q) * d_pm * D(q,n) - xs(p,q) * D(p,m) * d_qn;
+                end
+            end
+        end
+    end
+
+    for i = 1:N+1
+        for j = 1:N+1
+            for m = 1:N+1
+                for n = 1:N+1
+                    for p = 1:N+1
+                        for q = 1:N+1
+                            A(i,j,m,n) = A(i,j,m,n) + w(p) * w(q) * 1/J(p,q) * dot(grad(p,q,i,j,:),grad(p,q,m,n,:));
+                        end
+                    end
+                    d_im=i==m; % Kronecker delta
+                    d_jn=j==n; % Kronecker delta
+                    B(i,j,m,n) = B(i,j,m,n) + w(i) * w(j) * J(i,j) * d_im * d_jn;
+                end
+            end
+        end
+    end
+
+    
 end
 
 

@@ -31,7 +31,7 @@ if ~exist(name,'file')
 end
 
 fid=fopen(name);
-data=fscanf(fid,'%f',[ngll,ngll+2])
+data=fscanf(fid,'%f',[ngll,ngll+2]);
 fclose(fid);
 
 x=data(:,1);

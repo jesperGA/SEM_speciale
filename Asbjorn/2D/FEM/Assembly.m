@@ -22,7 +22,7 @@ opt.Null = spdiags(Nmatr,0,opt.neqn,opt.neqn);
 opt.f = zeros(opt.neqn,1); 
 
 %% MATRICES (STIFFMESS, MASS and DAMPING)
-ldof=(study.N+1)^2*2;
+ldof=(study.N+1)^2;
 
 % Zero the arrays for the triplets
 I = zeros(opt.nel*ldof*ldof,1);
@@ -57,11 +57,13 @@ for e=1:opt.nel
     % w(:)=sum(w)/(length(x));
     % xi(:) = linspace(xi(1),xi(end),length(xi));
     
-    [A,B] = elementMatrix2D(xy(:,1), xy(:,2),xi,w,h,study.N);
+    % x=xy(:,1);
+    % y=xy(:,2);
+    x = reshape(xy(:,1),study.N+1,study.N+1);
+    y = reshape(xy(:,2),study.N+1,study.N+1);
+    [A,B] = elementMatrix2D(x,y,xi,w,h',study.N);
     % [A,B] = elementMatrixBarTrapz(x,xi,w);
     % [A,B] = elementMatrixBarFEM(x);
-
-
     
     % add to global system (I,J,[KE,ME,CE])
     for krow = 1:ldof

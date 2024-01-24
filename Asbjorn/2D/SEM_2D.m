@@ -58,7 +58,7 @@ hold on;
 
 % Display node numbers
 for i = 1:length(node_numbers)
-    % text(node_coordinates(i, 1), node_coordinates(i, 2), num2str(node_numbers(i)), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
+    text(node_coordinates(i, 1), node_coordinates(i, 2), num2str(node_numbers(i)), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
 end
 
 % Add labels and title
@@ -93,7 +93,7 @@ for e = 1:size(mesh.IX,3)
     outer_nodes = [element_nodes(1,1:end), element_nodes(2:end,end)', element_nodes(end,end-1:-1:1), element_nodes(end-1:-1:1,1)'];
     plot(node_coordinates(outer_nodes,1),node_coordinates(outer_nodes,2),'k')
 end
-mesh.X = [(1:length(x))' x y];
+mesh.X = [(1:length(x))' node_coordinates(:,1) node_coordinates(:,2)];
 mesh.Material = [1.1 1.2 1.3 1.4];
 mesh.bound = [1 0 0];
 mesh.bound = [2 0 0];
