@@ -33,6 +33,6 @@ opt = Assembly(mesh, study, opt);
 opt = Solver(mesh, study, opt);
 
 %% Postproc for energies, stresses, strains
-opt = Postprocess(mesh,study,opt);
+% opt = Postprocess(mesh,study,opt);
 
 end

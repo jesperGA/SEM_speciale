@@ -15,7 +15,7 @@ function opt = Solver(mesh,study,opt)
 
 
 tic;
-opt.U = opt.A \ (opt.B * opt.f);
+opt.U = opt.A \ (opt.f);
 time = toc;
 fprintf('Solution found in %f s\n',time);
 
