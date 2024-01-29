@@ -15,6 +15,7 @@ for i = 1:N+1
         dl(i,j) = dlagrange(xi,N,j,i);
     end
 end
+% dl = dl;
 
 [dJ,xr,xs,yr,ys] = Jac2D(x,y,dl,N);
 gradl = zeros([n_gll,n_gll,n_gll,n_gll,2]);
@@ -26,13 +27,12 @@ for p=1:n_gll
     for q = 1:n_gll
         for m=1:n_gll
             for n = 1:n_gll
-                gradl(p,q,m,n,:) = [ys(p,q)*dl(p,m)*kroen(q,n)-yr(p,q)*kroen(p,m)*dl(q,n)
-                    xr(p,q)*kroen(p,m)*dl(q,n)-xs(p,q)*dl(p,m)*kroen(q,n)];
+                gradl(p,q,m,n,1) = ys(p,q)*dl(p,m)*kroen(q,n)-yr(p,q)*kroen(p,m)*dl(q,n);
+                gradl(p,q,m,n,2) = xr(p,q)*kroen(p,m)*dl(q,n)-xs(p,q)*dl(p,m)*kroen(q,n);
             end
         end
     end
 end
-
 %Compute ke and me.
 for i = 1:n_gll
     for j = 1:n_gll
@@ -42,19 +42,17 @@ for i = 1:n_gll
                 col = (m-1)*n_gll + n;
                 for p = 1:n_gll
                     for q=1:n_gll
-
-                        ke(row,col) =ke(row,col) + w(p)*w(q)*(1/dJ(p,q))*dot(gradl(p,q,i,j,:),gradl(p,q,m,n,:));
+                        ke(row,col) =ke(row,col) + w(p)*w(q)*(1/abs(dJ(p,q)))*dot(gradl(p,q,i,j,:),gradl(p,q,m,n,:));
 
                     end
                 end
-
                 me(row,col) = w(i)*w(j)*abs(dJ(i,j))*kroen(i,m)*kroen(j,n);
 
             end
         end
     end
 end
-
+ke;
 
 
 

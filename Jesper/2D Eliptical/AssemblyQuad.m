@@ -44,8 +44,7 @@ for e = 1:opt.nel
     %Calculate dofs for each elements.
     edof = zeros(ldof,1);
     indices = 1:length(nen);
-    edof(2*indices-1) = 2*nen - 1;
-    edof(2*indices) = 2*nen;
+    edof(indices) = nen;
 
     %Find x and y for each node.
     xy = mesh.X(nen,2:3);
@@ -55,7 +54,7 @@ for e = 1:opt.nel
 
 
     [me,ke] = twoD_helmholtz(x,y,[],[],n_GLL,w,xi);
-    
+
     for krow = 1:ldof
         for kcol = 1:ldof
             ntriplets = ntriplets+1;
@@ -73,6 +72,7 @@ end
 ind = find(I>0);
 opt.K = sparse(I(ind),J(ind),KE(ind),opt.neqn,opt.neqn);
 opt.M = sparse(I(ind),J(ind),ME(ind),opt.neqn,opt.neqn);
+opt.P = sparse(opt.neqn,1);
 
 % Initial conditions for transient problem.
 
