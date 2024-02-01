@@ -1,4 +1,4 @@
-% [iglob,x,y]=MeshBox(LX,LY,NELX,NELY,XGLL)
+% [iglob,x,y]=MeshBox(LX,LY,NELX,NELY,XGLL,type)
 % 
 % PURPOSE	Generates a Spectral Element mesh for a rectangular box,
 %		elements and their internal Gauss-Lobatto-Legendre (GLL) sub-grids.
@@ -8,6 +8,7 @@
 %		NELX	number of elements along x
 %		NELY	number of elements along y
 %		NGLL	number of GLL nodes (polynomial degree +1)
+%       type    1: for GLL spaced grid 2: for regular spaced grid
 %
 % OUTPUT	iglob(NGLL,NGLL,NELX*NELY) maps the local numbering of the 
 %			computational nodes to their global (non-redundant) numbering.
@@ -19,12 +20,17 @@
 %		x(:)	global x-coordinates of the GLL nodes, start at 0
 %		y(:)	global y-coordinates of the GLL nodes, start at 0
 %
-function [iglob,x,y]=MeshBox(LX,LY,NELX,NELY,NGLL)
+function [iglob,x,y]=MeshBox(LX,LY,NELX,NELY,NGLL,type)
 
 dxe = LX/NELX;
 dye = LY/NELY;
 
+if type ==1
 [XGLL,~,~] = lglnodes(NGLL-1);
+
+elseif type == 2
+    XGLL = linspace(-1,1,NGLL);
+end
 
 iglob = zeros(NGLL,NGLL,NELX*NELY);	% local to global index mapping
 nglob = (NELX*(NGLL-1)+1)*(NELY*(NGLL-1)+1);	% number of global nodes

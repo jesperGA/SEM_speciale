@@ -113,7 +113,7 @@ end
 
 function [dJ,xr,xs,yr,ys] = Jac2D(x,y,dl,N)
 %Calculated according to Rønquist (2.xx)
-xr = zeros(N+1,N+1);xs = xr;yr = x  r; ys = xr; % Initialize vectors
+xr = zeros(N+1,N+1);xs = xr;yr = xr; ys = xr; % Initialize vectors
 for p = 1:N+1
     for q=1:N+1
         for m=1:N+1

@@ -4,8 +4,9 @@ clc
 mat = [1.1,1.2,1.3,1.4;
     1.1,1.2,1.3,1.4];
 
-GLL = 2:1:13;
-% GLL = 5;
+% GLL = 2:1:13;
+GLL = 5;
+n_interp = 20;
 % for i = 1:numel(GLL)
 % n_GLL = GLL(i); %Specify number of GLL points
 for order = 1:numel(GLL)
@@ -16,47 +17,12 @@ for order = 1:numel(GLL)
     [xi,w,~] = lglnodes(n_GLL-1);
     study.xi = xi;study.w = w;study.n_GLL = n_GLL;
     %% MESH
-    [iglob, xN,yN] = MeshBox(1,1,2,2,n_GLL);
+    [iglob, xN,yN] = MeshBox(1,1,2,2,n_GLL,1);
+    [iglob2, xN2,yN2] = MeshBox(1,1,2,2,n_interp,2);
     %Create mesh like  Rønquist in Figure X. 4 elements in a 2x2 constallation.
     %and a sinus shaped top.
-    for e = 3:4
-        glob_mod = iglob(:,:,e);
-        for k = 1:size(glob_mod,1)
-            if e==3
-                x_spec = xN(glob_mod(k,end));
-                yN(glob_mod(k,end)) = 1+1/4*sin(pi*x_spec);
-                ratio(k) = (1/2+1/4*sin(pi*x_spec))/(1/2);
-                yN(glob_mod(k,2:end-1)) = (yN(glob_mod(k,2:end-1))-1/2)*(ratio(k))+1/2;
-            elseif e==4 && k==1
-            else
-                x_spec = xN(glob_mod(k,end));
-                yN(glob_mod(k,end)) = 1+1/4*sin(pi*x_spec);
-                % ratio = (1/2-1/4*x_spec)/(1/2);
-                yN(glob_mod(k,2:end-1)) = (yN(glob_mod(k,2:end-1))-1/2)*(ratio(end-k+1))+1/2;
-            end
-
-        end
-
-    end
-
-    %Boundaries on west
-    west_bound = iglob(1,:,[1,3]);
-    west_bound_mat = [west_bound(:),ones(numel(west_bound),1),zeros(numel(west_bound),1)];
-
-    south_bound = iglob(:,1,[1,2]);
-    south_bound_mat = [south_bound(:),ones(numel(south_bound),1),sin(xN(south_bound(:))).*exp(-yN(south_bound(:)))];
-
-    east_bound = iglob(end,:,[2,4]);
-    east_bound_mat = [east_bound(:),ones(numel(east_bound),1),sin(xN(east_bound(:))).*exp(-yN(east_bound(:)))];
-
-    north_bound = iglob(:,end,[3,4]);
-    north_bound_mat = [north_bound(:),ones(numel(north_bound),1),sin(xN(north_bound(:))).*exp(-yN(north_bound(:)))];
-
-    mesh.bound = [west_bound_mat;south_bound_mat;east_bound_mat;north_bound_mat];
-    % figure()
-    % plotmesh(iglob,xN,yN)
-    mesh.IX = iglob;
-    mesh.X = [ones(length(xN),1),xN,yN]; %Save grid to mesh-struct
+    mesh = modify_to_roenquist_mesh(xN,yN,iglob);
+    mesh_interp = modify_to_roenquist_mesh(xN2,yN2,iglob2);
     %% Generate system matrices
     opt = [];
     [opt,study] = AssemblyQuad(mesh,opt,study);
@@ -80,6 +46,9 @@ for order = 1:numel(GLL)
 
     sol = sin(X).*exp(-Y);
     sol_points = sin(xN).*exp(-yN);
+
+    [interp_data] = twoD_element_interpolator(mesh,mesh_interp, opt.U, xN, yN);
+    solution_plot(interp_data,n_interp)
 
     % figure()
     % % surf(X,Y,sol)
