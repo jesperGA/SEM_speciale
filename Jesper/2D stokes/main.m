@@ -1,11 +1,17 @@
 clear
 close all
 clc
+
+%% addpath to FEA, MESH and VISUALIZATION (ParaView)
+addpath('SEM')
+addpath('MESH')
+addpath('PLOT')
+
 mat = [1.1,1.2,1.3,1.4;
     1.1,1.2,1.3,1.4];
 
-GLL = 2:1:13;
-% GLL = 5;
+% GLL = 2:1:13;
+GLL = 5;
 % n_interp = 20;
 % for i = 1:numel(GLL)
 % n_GLL = GLL(i); %Specify number of GLL points
@@ -17,12 +23,11 @@ for order = 1:numel(GLL)
     [xi,w,~] = lglnodes(n_GLL-1);
     study.xi = xi;study.w = w;study.n_GLL = n_GLL;
     %% MESH
-    [iglob, xN,yN] = MeshBox(2,2,2,2,n_GLL,1);
-    % [iglob2, xN2,yN2] = MeshBox(1,1,2,2,n_interp,2);
-    %Create mesh like  Rønquist in Figure X. 4 elements in a 2x2 constallation.
-    %and a sinus shaped top.
-    mesh = modify_to_roenquist_mesh(xN,yN,iglob);
-    % mesh_interp = modify_to_roenquist_mesh(xN2,yN2,iglob2);
+    [iglobV, xNV,yNV] = MeshBox_mod(2,2,2,2,n_GLL,1);
+    [iglobP, xNP,yNP] = MeshBox_mod(2,2,2,2,n_GLL-2,2);
+
+    mesh.IXp = iglobP;mesh.Xp = [(1:numel(xNP)).',xNP,yNP];
+    mesh.IXv = iglobV;mesh.Xv = [(1:numel(xNV)).',xNV,yNV];
     %% Generate system matrices
     opt = [];
     [opt,study] = AssemblyQuad(mesh,opt,study);
