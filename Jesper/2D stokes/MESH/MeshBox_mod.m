@@ -39,7 +39,7 @@ iglob = zeros(NGLL,NGLL,NELX*NELY);	% local to global index mapping
 if type == 1 || type == 3
     nglob = (NELX*(NGLL-1)+1)*(NELY*(NGLL-1)+1);	% number of global nodes
 elseif type ==2
-    nglob = (NELX*(NGLL)+1)*(NELY*(NGLL)+1);
+    nglob = (NELX*(NGLL))*(NELY*(NGLL));
 end
 x     = zeros(nglob,1);		% coordinates of GLL nodes
 y     = zeros(nglob,1);

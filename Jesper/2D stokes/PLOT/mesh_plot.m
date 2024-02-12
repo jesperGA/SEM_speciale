@@ -1,68 +1,93 @@
 function mesh_plot(mesh)
-
 figure;
 hold on;
 
+% Initialize arrays for 'p' mesh lines (only interior)
+pLinesX = [];
+pLinesY = [];
+
+% Initialize arrays to hold line coordinates for efficiency
+edgeLinesX = [];
+edgeLinesY = [];
+interiorLinesX = [];
+interiorLinesY = [];
+
+% Process 'v' mesh
 for e = 1:size(mesh.IXv, 3) % For each element in 'v' mesh
-    % Plot interior grid lines with thinner lines
-    % Loop through all but the outer rows and columns for the internal grid
-    for i = 2:size(mesh.IXv, 1)-1 % For each interior column
-        for j = 1:size(mesh.IXv, 2)-1 % Connect nodes vertically
+    % Edge lines
+    edgeIdx = [1, size(mesh.IXv,1); 1, size(mesh.IXv,2)]; % Indices for edges (first and last row/column)
+    for i = edgeIdx(1,:) % Horizontal edge lines (top and bottom)
+        for j = 1:size(mesh.IXv,2)-1
             nodeStart = mesh.IXv(i, j, e);
             nodeEnd = mesh.IXv(i, j+1, e);
-            plot([mesh.Xv(nodeStart, 2), mesh.Xv(nodeEnd, 2)], [mesh.Xv(nodeStart, 3), mesh.Xv(nodeEnd, 3)], 'k--', 'LineWidth', 0.5);
+            edgeLinesX = [edgeLinesX, [mesh.Xv(nodeStart, 2); mesh.Xv(nodeEnd, 2)]];
+            edgeLinesY = [edgeLinesY, [mesh.Xv(nodeStart, 3); mesh.Xv(nodeEnd, 3)]];
         end
     end
-    for j = 2:size(mesh.IXv, 2)-1 % For each interior row
-        for i = 1:size(mesh.IXv, 1)-1 % Connect nodes horizontally
+    for j = edgeIdx(2,:) % Vertical edge lines (left and right)
+        for i = 1:size(mesh.IXv,1)-1
             nodeStart = mesh.IXv(i, j, e);
             nodeEnd = mesh.IXv(i+1, j, e);
-            plot([mesh.Xv(nodeStart, 2), mesh.Xv(nodeEnd, 2)], [mesh.Xv(nodeStart, 3), mesh.Xv(nodeEnd, 3)], 'k--', 'LineWidth', 0.5);
+            edgeLinesX = [edgeLinesX, [mesh.Xv(nodeStart, 2); mesh.Xv(nodeEnd, 2)]];
+            edgeLinesY = [edgeLinesY, [mesh.Xv(nodeStart, 3); mesh.Xv(nodeEnd, 3)]];
         end
     end
 
-    % Plot edge lines with thicker lines
-    % Top and bottom edge rows
-    for i = [1, size(mesh.IXv, 1)] % Only first and last row for edges
-        for j = 1:size(mesh.IXv, 2)-1 % Connect nodes horizontally
+    % Interior lines
+    for i = 2:size(mesh.IXv,1)-1 % Horizontal interior lines
+        for j = 1:size(mesh.IXv,2)-1
             nodeStart = mesh.IXv(i, j, e);
             nodeEnd = mesh.IXv(i, j+1, e);
-            plot([mesh.Xv(nodeStart, 2), mesh.Xv(nodeEnd, 2)], [mesh.Xv(nodeStart, 3), mesh.Xv(nodeEnd, 3)], 'k-', 'LineWidth', 2); % Thicker line
+            interiorLinesX = [interiorLinesX, [mesh.Xv(nodeStart, 2); mesh.Xv(nodeEnd, 2)]];
+            interiorLinesY = [interiorLinesY, [mesh.Xv(nodeStart, 3); mesh.Xv(nodeEnd, 3)]];
         end
     end
-    % Left and right edge columns
-    for j = [1, size(mesh.IXv, 2)] % Only first and last column for edges
-        for i = 1:size(mesh.IXv, 1)-1 % Connect nodes vertically
+    for j = 2:size(mesh.IXv,2)-1 % Vertical interior lines
+        for i = 1:size(mesh.IXv,1)-1
             nodeStart = mesh.IXv(i, j, e);
             nodeEnd = mesh.IXv(i+1, j, e);
-            plot([mesh.Xv(nodeStart, 2), mesh.Xv(nodeEnd, 2)], [mesh.Xv(nodeStart, 3), mesh.Xv(nodeEnd, 3)], 'k-', 'LineWidth', 2); % Thicker line
+            interiorLinesX = [interiorLinesX, [mesh.Xv(nodeStart, 2); mesh.Xv(nodeEnd, 2)]];
+            interiorLinesY = [interiorLinesY, [mesh.Xv(nodeStart, 3); mesh.Xv(nodeEnd, 3)]];
         end
     end
 end
 
-% Plot 'p' mesh with dotted lines
+% Plot lines for 'v' mesh - edges and interior
+plot(edgeLinesX, edgeLinesY, 'k-', 'LineWidth', 2,'HandleVisibility', 'off'); % Edge lines
+plot(interiorLinesX, interiorLinesY, 'k-', 'LineWidth', 0.5,'HandleVisibility', 'off'); % Interior lines
+
+% Process 'p' mesh for interior lines
 for e = 1:size(mesh.IXp, 3) % For each element in 'p' mesh
-    % Assuming a similar logic applies to 'p' mesh, if not, adjust accordingly
-    for i = 1:size(mesh.IXp, 1) % For each column
-        for j = 1:size(mesh.IXp, 2) - 1 % Connect nodes vertically
+    for i = 1:size(mesh.IXp,1) % Horizontal lines
+        for j = 1:size(mesh.IXp,2)-1
             nodeStart = mesh.IXp(i, j, e);
             nodeEnd = mesh.IXp(i, j+1, e);
-            plot([mesh.Xp(nodeStart, 2), mesh.Xp(nodeEnd, 2)], [mesh.Xp(nodeStart, 3), mesh.Xp(nodeEnd, 3)], 'k:', 'LineWidth', 0.5);
+            pLinesX = [pLinesX, [mesh.Xp(nodeStart, 2); mesh.Xp(nodeEnd, 2)]];
+            pLinesY = [pLinesY, [mesh.Xp(nodeStart, 3); mesh.Xp(nodeEnd, 3)]];
         end
     end
-    for j = 1:size(mesh.IXp, 2) % For each row
-        for i = 1:size(mesh.IXp, 1) - 1 % Connect nodes horizontally
+    for j = 1:size(mesh.IXp,2) % Vertical lines
+        for i = 1:size(mesh.IXp,1)-1
             nodeStart = mesh.IXp(i, j, e);
             nodeEnd = mesh.IXp(i+1, j, e);
-            plot([mesh.Xp(nodeStart, 2), mesh.Xp(nodeEnd, 2)], [mesh.Xp(nodeStart, 3), mesh.Xp(nodeEnd, 3)], 'k:', 'LineWidth', 0.5);
+            pLinesX = [pLinesX, [mesh.Xp(nodeStart, 2); mesh.Xp(nodeEnd, 2)]];
+            pLinesY = [pLinesY, [mesh.Xp(nodeStart, 3); mesh.Xp(nodeEnd, 3)]];
         end
     end
 end
-scatter(mesh.Xv(:,2),mesh.Xv(:,3),'*k')
-scatter(mesh.Xp(:,2),mesh.Xp(:,3),'or')
+
+% Plot lines for 'p' mesh - interior only, using dotted lines
+plot(pLinesX, pLinesY, 'k:', 'LineWidth',1,'HandleVisibility', 'off');
+
+scatter(mesh.Xv(:,2),mesh.Xv(:,3),'*k','DisplayName','$v$-grid')
+scatter(mesh.Xp(:,2),mesh.Xp(:,3),'or','DisplayName','$p$-grid')
+ax = gca; % Get the handle to the current axes
+ax.TickLabelInterpreter = 'latex'; % Set the tick labels to use LaTeX interpreter
+ax.FontSize = 14; % Set the font size for the axes
+legend('Location','northoutside','Orientation','horizontal','Interpreter','latex',FontSize=18)
 hold off;
 axis equal;
-xlabel('X coordinate');
-ylabel('Y coordinate');
-title('Staggered Mesh Visualization');
+xlabel('X coordinate','Interpreter','latex',FontSize=18);
+ylabel('Y coordinate','Interpreter','latex',FontSize=18);
+% title('Staggered Mesh Visualization');
 end

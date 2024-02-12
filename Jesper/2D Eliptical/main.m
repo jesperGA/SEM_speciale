@@ -58,17 +58,20 @@ for order = 1:numel(GLL)
     % legend('Numerical','Analytical')
 
     %% Error calc
-    for i = 1:4
-        point = mesh.IX(:,:,i);
-        point = point(:);
+    % for i = 1:4
+    %     point = mesh.IX(:,:,i);
+    %     point = point(:);
 
-        error(i,order) = norm(opt.U(point)-sol_points(point),inf);
-    end
+        error(order) = norm(opt.U-sol_points,inf);
+    % end
 
 end
 
+df = readmatrix('roenquist_convergence_Poisson.csv','Delimiter',',');
 
-figure();semilogy(2*GLL+1,error,'-o','LineWidth',3)
+figure();semilogy(2*GLL,error,'-o','LineWidth',3)
+hold on
+semilogy(df(:,1),df(:,2),'-*','LineWidth',3)
 grid on
 %
 % Setting the font size to 1
@@ -77,4 +80,4 @@ set(gca, 'FontSize', 18);
 % % Adding labels with LaTeX interpreter
 xlabel('$n_{dof}$', 'Interpreter', 'latex', 'FontSize', 18);
 ylabel('$\| u-u_{corr} \|_{\infty}$ Error', 'Interpreter', 'latex', 'FontSize', 18);
-legend('Element 1','Element 2','Element 3','Element 4','Interpreter','latex')
+legend('Numerical','Roenquist','Interpreter','latex')
