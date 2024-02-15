@@ -4,7 +4,7 @@ clc
 mat = [1.1,1.2,1.3,1.4;
     1.1,1.2,1.3,1.4];
 
-GLL = 2:1:13;
+GLL = 2:1:11;
 % GLL = 5;
 % n_interp = 20;
 % for i = 1:numel(GLL)
@@ -69,7 +69,7 @@ end
 
 df = readmatrix('roenquist_convergence_Poisson.csv','Delimiter',',');
 
-figure();semilogy(2*GLL,error,'-o','LineWidth',3)
+figure();semilogy(2*GLL-1,error,'-o','LineWidth',3)
 hold on
 semilogy(df(:,1),df(:,2),'-*','LineWidth',3)
 grid on
