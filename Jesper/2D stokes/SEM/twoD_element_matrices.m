@@ -1,9 +1,10 @@
-function [me,ke,de] = twoD_element_matrices(x,y,E,dens,n_gll,w,wp,xi,zeta)
+function [me,ke,de,mhat] = twoD_element_matrices(x,y,xp,yp,E,dens,n_gll,w,wp,xi,zeta)
 
 % ldof = numel(x);
 
 ke = zeros([n_gll*n_gll,n_gll*n_gll]);
 me = ke; %de{1} = ke;de{2} = ke;
+
 
 L1 = x(end,1)-x(1,1);
 L2 = y(1,end)-y(1,1);
@@ -12,6 +13,7 @@ L2 = y(1,end)-y(1,1);
 
 N=n_gll-1;
 N_gl = numel(wp);
+mhat = zeros(N_gl,N_gl);
 % Calc all langragian derivatives: MAYBE CALCULATE EVEN FURTHER BACK? iS
 % THE SAME FOR ALL ELEMENTS.
 for i = 1:N+1
@@ -69,6 +71,18 @@ for i =1:N+1
     dlP(:,i) =wp.*LagrangeFormInterpolation(xi,dl(:,i).',zeta).';
 end
 
+%Only for rectlinear elements.
+for i = 1:N_gl
+    for j = 1:N_gl
+        for m = 1:N_gl
+            for n = 1:N_gl
+                row = (i-1)*N_gl + j;
+                col = (m-1)*N_gl + n;
+                mhat(row,col) = wp(i)*wp(j)*abs(dJ(i,j))*kroen(i,m)*kroen(j,n);
+            end
+        end
+    end
+end
 %CALC D only for rectilinear elements. For deformed element use dJ for P
 %mesh.
 de{1} = kron(L2/2.*I_tilde,dlP);de{2} = kron(L1/2.*dlP,I_tilde);
@@ -76,12 +90,12 @@ de{1} = kron(L2/2.*I_tilde,dlP);de{2} = kron(L1/2.*dlP,I_tilde);
 %     for j = 1:N+1
 %         for m = 1:N_gl
 %             for n = 1:N+1
-% Compute row and column indices for mapping into C
+%                 % Compute row and column indices for mapping into C
 %                 row = (i-1)*(N_gl) + m;
 %                 col = (j-1)*(N+1) + n;
 %
-% Compute the Kronecker product and insert into C
-%                 de{1}(row, col) = dJp(i,m)*I_tilde(i, j) * dlP(m, n);
+%                 % Compute the Kronecker product and insert into C
+%                 de{1}(row, col) = dJ(i,m)*I_tilde(i, j) * dlP(m, n);
 %                 de{2}(row, col) = dJ(m,i)*dlP(i,j)*I_tilde(m,n);
 %             end
 %         end

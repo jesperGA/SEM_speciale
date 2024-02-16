@@ -5,7 +5,7 @@ mat = [1.1,1.2,1.3,1.4;
     1.1,1.2,1.3,1.4];
 
 GLL = 2:1:11;
-% GLL = 5;
+% GLL = 4;
 % n_interp = 20;
 % for i = 1:numel(GLL)
 % n_GLL = GLL(i); %Specify number of GLL points
