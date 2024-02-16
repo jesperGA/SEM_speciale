@@ -163,10 +163,10 @@ xr = zeros(N+1,N+1);xs = xr;yr = xr; ys = xr; % Initialize vectors
 for p = 1:N+1
     for q=1:N+1
         for m=1:N+1
-            xr(p,q) = xr(p,q) + dl(p,m)*x(q,m);
-            xs(p,q) = xs(p,q) + dl(q,m)*x(m,p);
-            yr(p,q) = yr(p,q) + dl(p,m)*y(q,m);
-            ys(p,q) = ys(p,q) + dl(q,m)*y(m,p);
+            xr(p,q) = xr(p,q) + dl(p,m)*x(m,q);
+            xs(p,q) = xs(p,q) + dl(q,m)*x(p,m);
+            yr(p,q) = yr(p,q) + dl(p,m)*y(m,q);
+            ys(p,q) = ys(p,q) + dl(q,m)*y(p,m);
         end
     end
 end

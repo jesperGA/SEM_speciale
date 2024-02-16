@@ -46,9 +46,6 @@ opt.sys_mat = sys_mat;
 
 if strcmp(study.solve_type,'direct') == 1
 
-    % B_mat = null_sys'*B_mat*null_sys-(null_sys-speye(size(null_sys)));
-    % % Solve static problem
-    % (B_mat*opt.P)
     opt.U = sys_mat \ (opt.P);
 
 elseif strcmp(study.solve_type,'uzawa') == 1
@@ -60,9 +57,9 @@ elseif strcmp(study.solve_type,'uzawa') == 1
     K1 = sys_mat(1:neqnv,1:neqnv);
     K2 = sys_mat(neqnv+1:2*neqnv,neqnv+1:2*neqnv);
 
-    RHS1 = opt.P(1:neqnv);RHS2 = opt.P(neqnv+1:neqnv*2);
-    A = (D1*(K1\D1')+D2*(K2\D2'));
-    B = -D1*(K1\RHS1)+(-D2*(K2\RHS2));
+    RHS1 = opt.P(1:neqnv);RHS2 = opt.P(neqnv+1:neqnv*2);RHS3 = opt.P(neqnv*2+1:end);
+    A = D1*(K1\D1')+D2*(K2\D2');
+    B = -D1*(K1\RHS1)-D2*(K2\RHS2)-RHS3;
 
     A = (A+A')/2;
 
