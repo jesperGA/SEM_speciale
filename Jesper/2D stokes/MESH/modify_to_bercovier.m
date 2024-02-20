@@ -23,7 +23,10 @@ function mesh = modify_to_bercovier(xN,yN,iglob)
 % yN = yN-1;
 
 U1 =@(xx,yy) -256 .* xx .^ 2 .* (xx - 1) .^ 2 .* yy .* (yy - 1) .* (2 .* yy - 1);
-U2 = @(xx,yy) -U1(yy,xx);
+U2 = @(xx,yy) U1(yy,xx);
+
+% U1 = @(xx,yy) -256 .* xx .^ 2 .* (xx - 1) .^ 2 .* yy .* (yy - 1) .* (2 .* yy - 1);
+% U2 = @(xx,yy) -U1(yy,xx);
 
 %Boundaries on west FOR V1:
 west_bound = iglob(1,:,[1,3]);

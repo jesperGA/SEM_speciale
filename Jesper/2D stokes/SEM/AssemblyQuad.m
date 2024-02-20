@@ -43,7 +43,7 @@ Jp = zeros(opt.nel*ldofv*ldofp,1);
 DE1 = zeros(opt.nel*ldofv*ldofp,1);
 DE2 = zeros(opt.nel*ldofv*ldofp,1);
 
-Mh = zeros(opt.nel*ldofp*ldofp);
+Mh = zeros(opt.nel*ldofp*ldofp,1);
 Ip2 = Mh;
 Jp2 = Mh;
 

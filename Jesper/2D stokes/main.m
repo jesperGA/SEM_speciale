@@ -13,8 +13,8 @@ study.p_type = 'roenquist';
 % study.p_type = 'bercover';
 % study.solve_type = 'direct'; %uzawa
 study.solve_type = 'uzawa';
-GLL = 4:1:13;
-% GLL = 10;
+GLL = 4:1:14;
+% GLL = 4;
 % n_interp = 20;
 % for i = 1:numel(GLL)
 % n_GLL = GLL(i); %Specify number of GLL points
@@ -44,27 +44,28 @@ for order = 1:numel(GLL)
     xx = mesh.Xv(:,2);yy = mesh.Xv(:,3);
     xxp = mesh.Xp(:,2);yyp = mesh.Xp(:,3);
     % U1 = @(xx,yy) -256 .* xx .^ 2 .* (xx - 1) .^ 2 .* yy .* (yy - 1) .* (2 .* yy - 1);
-    % U2 = @(xx,yy) -U1(yy,xx);
+    % U2 = @(xx,yy) U1(yy,xx);
     U1 = @(xx,yy) 1-yy.^2;
     U2 = @(xx,yy) 0*xx;
     U_Tot = sqrt(U1(xx,yy).^2+U2(xx,yy).^2);
     u_mag = sqrt(u1.^2+u2.^2);
-    xx = mesh.Xv(:,2);yy = mesh.Xv(:,3);
 
 
     sol1 = U1(xx,yy);
     sol2 = U2(xx,yy);
     psol = sin(pi.*xxp).*sin(pi*yyp);
+    % psol = zeros(length(xxp),1);
+    % psol = (xxp-1/2).*(yyp-1/2);
 
-    u_check = [sol1
-        sol2
-        psol];
+    u_check = [u1
+        u2
+        p];
     P_check_vec = opt.sys_mat*u_check-opt.P;
 
     % figure()
     % scatter3(xx,yy,u1,'*k')
     % hold on
-    % scatter3(xx,yy,sol1,'or')
+    % % scatter3(xx,yy,sol1,'or')
     % title('U1 velocity')
     % 
     % figure()
@@ -97,7 +98,7 @@ A = readmatrix("Roenquist_u.csv");
 figure();semilogy(2*GLL-1,error,'-ok','LineWidth',3)
 hold on
 semilogy(2*GLL-1,error2,'-oy','LineWidth',3)
-semilogy(A(:,1),A(:,2),'*r')
+% semilogy(A(:,1),A(:,2),'*r')
 grid on
 
 % Setting the font size to 1
@@ -107,5 +108,5 @@ set(gca, 'FontSize', 18);
 xlabel('$n_{dof}$', 'Interpreter', 'latex', 'FontSize', 18);
 ylabel('$\| u-u_{corr} \|_{\infty}$ Error', 'Interpreter', 'latex', 'FontSize', 18);
 % legend('Element 1','Element 2','Element 3','Element 4','Interpreter','latex')
-legend('SEM','Roenquist','Interpreter','latex')
+legend('Velocity','Pressure','Velocity Ron','Interpreter','latex')
 

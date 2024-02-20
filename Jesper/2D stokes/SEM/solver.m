@@ -5,10 +5,20 @@ if strcmp(study.p_type,'roenquist') == 1
     opt.P1 = 2+pi*cos(pi*xx).*sin(pi*yy);
     opt.P2 = pi*sin(pi*xx).*cos(pi*yy);
 elseif strcmp(study.p_type,'bercover') == 1
-    opt.P1 = (1536 .* xx .^ 2 .* (xx - 1) .^ 2 .* (2 .* yy - 1)) + (256 .*...
-        (yy - 1) .* (2 .* yy - 1) .* yy .* (12 .* xx .^ 2 - 12 .* xx + 2));
-    opt.P2 = (1536 .* yy .^ 2 .* (yy - 1) .^ 2 .* (2 .* xx - 1)) + (256 .*...
-        (xx - 1) .* (2 .* xx - 1) .* xx .* (12 .* yy .^ 2 - 12 .* yy + 2));
+    % p1 = @(x,y) 128*(x.^2.*(x-1).*12.*(2.*y-1)+2.*(y-1).*(2.*y-1).*y.*(12.*x.^2-12.*x+2));
+    % opt.P1 = p1(xx,yy);
+    % opt.P2 = p1(yy,xx);
+    % opt.P1 = (1536 .* xx .^ 2 .* (xx - 1) .^ 2 .* (2 .* yy - 1)) + (256 .*...
+    %     (yy - 1) .* (2 .* yy - 1) .* yy .* (12 .* xx .^ 2 - 12 .* xx + 2));
+    % opt.P2 = (1536 .* yy .^ 2 .* (yy - 1) .^ 2 .* (2 .* xx - 1)) + (256 .*...
+    %     (xx - 1) .* (2 .* xx - 1) .* xx .* (12 .* yy .^ 2 - 12 .* yy + 2));
+
+    F1 = @(X1,X2) 128 .* (X1.^2 .* (X1 - 1) .^2 .*12 .* (2 .* X2 - 1) + ...
+        2 .* (X2 - 1) .* (2 .* X2 - 1) .* X2 .* (12 * X1 .^ 2 - 12 .* X1 + 2))+X2-1/2;
+    F2 = @(X1,X2)   F1(X2,X1);
+
+    opt.P1 = F1(xx,yy);
+    opt.P2 = F2(xx,yy);
 else
     error('Load case not defined')
 end
