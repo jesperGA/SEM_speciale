@@ -3,9 +3,11 @@ function plotMesh2Droenquistex(mesh)
     % Plot mesh
     defaultColors = get(groot, 'DefaultAxesColorOrder');
     fig=figure;
-    fig.Position = [651.4000 243.4000 590.4000 606.4000]
-    plot(mesh.X(:, 2), mesh.X(:, 3), '.');
+    fig.Position = [651.4000 243.4000 640 606.4000]
+    scatter(mesh.X(:,2),mesh.X(:,3),'.','SizeData', 500, 'MarkerEdgeColor', defaultColors(1,:),'HandleVisibility', 'off')
     hold on;
+
+    fntsize = 22;
     % 
     % % Display node numbers
     % for i = 1:length(mesh.X)
@@ -65,7 +67,7 @@ function plotMesh2Droenquistex(mesh)
             'Color', 'k');
     % Adding an arrow for the x-axis
     % annotation('arrow', [start point x, end point x], [start point y, end point y])
-    zero=[0.23 0.165]
+    zero=[0.252 0.17]
     annotation('arrow', [zero(1), zero(1)+0.1], [zero(2), zero(2)], 'Color', 'k');
     annotation('arrow', [zero(1), zero(1)], [zero(2), zero(2)+0.1], 'Color', 'k');
     zero=[0.67 0.885]
@@ -73,9 +75,7 @@ function plotMesh2Droenquistex(mesh)
     box off 
     axis off
     
-    enhance_plot(0, 20, 1, 10, 0);
-    % Hold off to stop adding to the current plot
-    % hold off;
+    enhance_plot(0, fntsize, 1, 100, 0);
 
     saveas(gcf,'2Dmesh','epsc')
 

@@ -1,4 +1,9 @@
 function plotMeshh(mesh)
+
+    fntsize = 20;
+    
+    defaultColors = get(groot, 'DefaultAxesColorOrder');
+
     % Define the nodes (x-coordinates)
     nodes = mesh.X(:,2); % Example nodes
     
@@ -9,41 +14,50 @@ function plotMeshh(mesh)
     fig = figure; hold on;
     fig.Position = [744 988.2000 560 120];
 
-    title('Mesh');
-    xlabel('x');
     grid on;
-    xticks([0 pi])
-    xticklabels({'0','\pi'})
+    axis off
     
-    % Remove Y-axis
-    set(gca, 'YColor', 'none')
+    zero=[0.13 0.58];
+    annotation('arrow', [zero(1), zero(1)+0.85], [zero(2), zero(2)], 'Color', 'k');
 
+    % Draw horizontal line for the domain
+    xlim([min(nodes), max(nodes)]);
+    ylim([-0.1, 0.1]); % Adjust vertical limits for visibility
+    line([min(nodes), max(nodes)], [0, 0], 'Color', 'black', 'LineWidth', 1);
+    
+    % Mark nodes with round markers
+    plot(nodes, zeros(size(nodes)), 'o', 'MarkerEdgeColor', defaultColors(1,:), 'MarkerFaceColor', defaultColors(1,:));
+    
     for i = 1:size(elements, 1)
         elementNodes = elements(i, :);
         xCoords = nodes(elementNodes);
         
-        % Draw box around element with thick black boundary and no fill
-        yOffset = 0.05; % Small vertical offset for visibility
-        xBox = [xCoords(1), xCoords(1), xCoords(end), xCoords(end)];
-        yBox = [-yOffset, yOffset, yOffset, -yOffset];
-        patch(xBox, yBox, 'white', 'EdgeColor', 'black', 'LineWidth', 2);
-        
-    end
-
-    enhance_plot(0, 0, 0, 0, 0);
-
-    for i = 1:size(elements, 1)
-        elementNodes = elements(i, :);
-        xCoords = nodes(elementNodes);
-        
-        % Mark nodes by thin vertical lines
-        for j = 1:length(xCoords)
-            line([xCoords(j), xCoords(j)], [-yOffset, yOffset], 'Color', 'black', 'LineWidth', 1);
+        % Draw thin vertical lines at the start and end of each element
+        for j = [1, length(xCoords)]
+            line([xCoords(j), xCoords(j)], [-0.05, 0.05], 'Color', 'black', 'LineWidth', 0.5);
         end
     end
+    
+    height= 0.01;
+    text(pi/4,height, ['\Omega_1'], ...
+    'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', ...
+    'Color', 'k', 'FontSize', fntsize);
+    text(3*pi/4,height, ['\Omega_2'], ...
+    'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', ...
+    'Color', 'k', 'FontSize', fntsize);
 
-    hold off;
+    text(pi, -0.05 , '\pi ', ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', ...
+            'Color', 'k');
+    text(0, -0.05, '0', ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', ...
+            'Color', 'k');
+    text(pi*1.1, height, '\it{x}', ...
+            'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', ...
+            'Color', 'k');
+    
 
+    enhance_plot(0,0,0,6,0)
+    
     saveas(gcf,'mesh1D','epsc')
 end
-

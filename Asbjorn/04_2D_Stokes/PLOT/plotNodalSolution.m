@@ -6,7 +6,7 @@ function plotNodalSolution(F,X,U,name)
     if strcmp(name,'$u_1$') || strcmp(name,'$u_2$')
         scatter3(X(:, 2), X(:, 3), (U),'LineWidth',1,'MarkerEdgeColor',defaultColors(1,:));
     elseif strcmp(name,'$p$')
-        scatter3(X(:, 2), X(:, 3), (U),'LineWidth',1,'MarkerEdgeColor',defaultColors(3,:));
+        scatter3(X(:, 2), X(:, 3), (U),'LineWidth',1,'MarkerEdgeColor',defaultColors(5,:));
     end
     hold on
     scatter3(X(:,2),X(:,3),(F(X(:,2),X(:,3))),'*')

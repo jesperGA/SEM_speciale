@@ -1,5 +1,6 @@
 function plotNodalSolution(F,X,U)
     % Plot convergence
+    fntsize = 18;
     defaultColors = get(groot, 'DefaultAxesColorOrder');
     figure;
     plot(X(:, 2), U,'o');
@@ -8,7 +9,7 @@ function plotNodalSolution(F,X,U)
     % Labels and title
     xlabel('$x$', 'Interpreter', 'latex', 'FontSize', 18);
     ylabel('$u$', 'Interpreter', 'latex', 'FontSize', 18);
-    title('Nodal solution', 'Interpreter', 'latex', 'FontSize', 18);
+
     % axis equal;
     grid on;
     % xlim([-0.1, 1.1]);
@@ -16,11 +17,9 @@ function plotNodalSolution(F,X,U)
     xticks([0 pi])
     xticklabels({'0','\pi'})
 
-    legend('SEM','Analytical (-sin($x$))','Location','north', 'Interpreter', 'latex', 'FontSize', 14)
-    enhance_plot(0, 0, 0, 0, 0);
-
-    % Hold off to stop adding to the current plot
-    hold off;
+    legend('SEM','Analytical -sin($x$)','Location','north', 'Interpreter', 'latex', 'FontSize', 14)
+  
+    enhance_plot(0, fntsize, 0, 0, 2);
     
     saveas(gcf,'NodalSol','epsc')
 end

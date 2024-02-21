@@ -1,4 +1,5 @@
-function [opt] = solver(opt, study,mesh)
+function [opt] = solver(opt, study, mesh)
+ 
 xx = mesh.Xv(:,2);yy = mesh.Xv(:,3);
 xxp = mesh.Xp(:,2);yyp = mesh.Xp(:,3);
 if strcmp(study.p_type,'roenquist') == 1
@@ -53,6 +54,8 @@ sys_mat = null_sys'*sys_mat*null_sys-(null_sys-speye(size(null_sys)));
 opt.sys_mat = sys_mat;
 
 % end
+
+
 
 if strcmp(study.solve_type,'direct') == 1
 

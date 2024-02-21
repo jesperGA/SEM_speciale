@@ -25,13 +25,13 @@ NELY = NELX;
 
 F = @(X, Y) sin(X) .* exp(-Y);
 
-for i = 2:5
+for i = 2:15
     study.N = i;        % Polynomial degree inside each element
     
     [mesh] = mesh2D(LX, LY, NELX, NELY, study.N);
 
     % Plot mesh
-    plotMesh2D(mesh)
+    % plotMesh2D(mesh)
     % plotMesh2Droenquistex(mesh)
 
     [mesh] = boundaryConditions(mesh, NELX, NELY);

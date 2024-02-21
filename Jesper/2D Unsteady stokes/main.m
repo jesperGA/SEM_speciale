@@ -13,6 +13,7 @@ study.p_type = 'roenquist';
 % study.p_type = 'bercover';
 % study.solve_type = 'direct'; %uzawa
 study.solve_type = 'uzawa';
+study.study_type = 'unsteady';
 GLL = 4:1:14;
 % GLL = 4;
 % n_interp = 20;

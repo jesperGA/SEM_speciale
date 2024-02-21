@@ -2,9 +2,9 @@ function plotConvergence(mesh,error,Roenquist)
     
     % Plot convergence
     defaultColors = get(groot, 'DefaultAxesColorOrder');
-    semilogy(5:2:length(error)*2+2,error(2:end),'o-');
+    semilogy(5:2:length(error)*2+2,error(2:end),'o-','Color',defaultColors(5,:));
     hold on;
-    semilogy(Roenquist(:,1),Roenquist(:,2),'*-');
+    semilogy(Roenquist(:,1),Roenquist(:,2),'*-','Color',defaultColors(4,:));
     
     % Labels and title
     xlabel('$N_t$', 'Interpreter', 'latex', 'FontSize', 18);

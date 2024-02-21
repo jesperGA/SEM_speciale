@@ -13,6 +13,7 @@ clc;
 addpath('FEM');
 addpath('MESH'); 
 addpath('PLOT');
+addpath('MISC');
 
 % Set solver and example
 solvers = {'Direct','pcg','Uzawa','UzawamodJGA'};
@@ -21,7 +22,7 @@ examples = {'Roenquist','Roenquist_Poisson','Bercovier_1','Bercovier_2'};
 study.example = examples{1};
 
 % Loop through polynomial orders
-polOrders = 3:3;
+polOrders = 10:10;
 
 %-------------------------------------------------------------------------%
 %                             Physical domain and meshing                 %
@@ -109,7 +110,7 @@ end
 % plotMesh2D(mesh)
 if strcmp(study.example,'Roenquist')
     plotMesh2Droenquistex(mesh)
-    saveas(gcf,'2DmeshN3','epsc')
+    saveas(gcf,'2Dmesh','epsc')
 elseif strcmp(study.example,'Bercovier_1')
     plotMesh2DBercovierex(mesh)
     legend off
@@ -117,7 +118,7 @@ elseif strcmp(study.example,'Bercovier_1')
 end
 plotNodalSolution(study.P,mesh.Xp,opt.p,'$p$')
 legend('SEM','Analytical','Location','northeast')
-saveas(gcf,['NodalSol_$p1$'],'epsc')
+saveas(gcf,['NodalSol_$p$'],'epsc')
 plotNodalSolution(study.U1,mesh.X,opt.u1,'$u_1$')
 plotNodalSolution(study.U2,mesh.X,opt.u2,'$u_2$')
 if strcmp(study.example,'Roenquist')

@@ -81,7 +81,7 @@ for e = 1:size(mesh.IX, 3) % For each element in 'v' mesh
 end
 
 % Plot lines for 'v' mesh - edges and interior
-plot(edgeLinesX, edgeLinesY, 'k-', 'LineWidth', 0.4,'HandleVisibility', 'off'); % Edge lines
+plot(edgeLinesX, edgeLinesY, 'k-', 'LineWidth', 1.5,'HandleVisibility', 'off'); % Edge lines
 plot(interiorLinesX, interiorLinesY, 'k--', 'LineWidth', 0.5,'HandleVisibility', 'off'); % Interior lines
 
 % Process 'p' mesh for interior lines
@@ -107,8 +107,8 @@ end
 % Plot lines for 'p' mesh - interior only, using dotted lines
 plot(pLinesX, pLinesY, 'k:', 'LineWidth',1,'HandleVisibility', 'off');
 
-scatter(mesh.X(:,2),mesh.X(:,3),'.','SizeData', 500, 'MarkerEdgeColor', defaultColors(1,:),'HandleVisibility', 'off')
-scatter(mesh.Xp(:,2),mesh.Xp(:,3),'.', 'SizeData', 500, 'MarkerEdgeColor', defaultColors(3,:),'HandleVisibility', 'off')
+scatter(mesh.X(:,2),mesh.X(:,3),'.','SizeData', 100, 'MarkerEdgeColor', defaultColors(1,:),'HandleVisibility', 'off')
+scatter(mesh.Xp(:,2),mesh.Xp(:,3),'.', 'SizeData', 100, 'MarkerEdgeColor', defaultColors(5,:),'HandleVisibility', 'off')
 
 % ax = gca; % Get the handle to the current axes
 % ax.TickLabelInterpreter = 'latex'; % Set the tick labels to use LaTeX interpreter
@@ -116,7 +116,7 @@ scatter(mesh.Xp(:,2),mesh.Xp(:,3),'.', 'SizeData', 500, 'MarkerEdgeColor', defau
 
 % Add dummy scatter plot for legend
 scatter(NaN, NaN, 'MarkerEdgeColor', defaultColors(1,:), 'LineWidth', 2, 'DisplayName', '$u$-grid');
-scatter(NaN, NaN, 'MarkerEdgeColor', defaultColors(3,:), 'LineWidth', 2, 'DisplayName', '$p$-grid');
+scatter(NaN, NaN, 'MarkerEdgeColor', defaultColors(5,:), 'LineWidth', 2, 'DisplayName', '$p$-grid');
 % Release the hold
 hold off;
 legend('Location','southoutside','Orientation','horizontal','Interpreter','latex',FontSize=fntsize)

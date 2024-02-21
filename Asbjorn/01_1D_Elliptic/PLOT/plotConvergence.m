@@ -3,26 +3,24 @@ function plotConvergence(error,dofs)
     
     % Plot convergence
     defaultColors = get(groot, 'DefaultAxesColorOrder');
-    figure;
+    fig = figure;
+    fig.Position = [585 692.2000 525.6000 385.8000];
     semilogy(dofs,error,'o-');
     hold on;
     semilogy(roenquist_convergence(:,1),roenquist_convergence(:,2),'*-');
     
     % Labels and title
     xlabel('$N_t$', 'Interpreter', 'latex', 'FontSize', 18);
-    ylabel('Error, $\| u-u_{analytic} \|_{\infty}$', 'Interpreter', 'latex', 'FontSize', 18);
-    title('Convergence');
+    ylabel('Error $\left\|u-u_h\right\|_{L^{\infty}, GL}$', 'Interpreter', 'latex', 'FontSize', 18);
+
     % axis equal;
     grid on;
-    % xlim([-0.1, 1.1]);
-    % ylim([-0.1, 1.4]);
-    enhance_plot(0, 0, 0, 0, 0);
+    xlim([0, 35]);
+    ylim([1e-15, 1e0]);
     
-    % Hold off to stop adding to the current plot
-    hold off;
-    
-    % legend('Nodal values E1','Nodal values E2','Nodal values E3','Nodal values E4')
-    legend('Our convergence','Rønquist convergence')
+    legend('Our Results','R\o nquist ', ...
+        'Interpreter', 'latex', 'FontSize', 18, 'Location','southwest' )
+    enhance_plot(0, 22, 0, 0, 2);
 
     saveas(gcf,'convergence','epsc')
 end
