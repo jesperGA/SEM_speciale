@@ -11,11 +11,24 @@ addpath('PLOT')
 %     1.1,1.2,1.3,1.4];
 study.p_type = 'roenquist';
 % study.p_type = 'bercover';
-% study.solve_type = 'direct'; %uzawa
-study.solve_type = 'uzawa';
-study.study_type = 'unsteady';
-GLL = 4:1:14;
-% GLL = 4;
+study.solve_type = 'direct'; %uzawa
+% study.solve_type = 'uzawa';
+% study.study_type = 'unsteady';
+study.study_type = 'steady';
+if strcmp(study.study_type,'unsteady') == 1
+    study.T = 1;
+    study.nt = 10000;
+    study.t = linspace(0,study.T,study.nt);
+    study.dt = (study.t(end)-study.t(1))/study.nt;
+
+    study.int_type = 'BDFk';
+    study.BDF_order = 1;
+
+    study.U10 = 0;
+    study.U20 = 0;
+end
+% GLL = 4:1:14;
+GLL = 4;
 % n_interp = 20;
 % for i = 1:numel(GLL)
 % n_GLL = GLL(i); %Specify number of GLL points
@@ -34,7 +47,7 @@ for order = 1:numel(GLL)
     [iglobP, xNP,yNP] = MeshBox_mod(2,2,2,2,n_GLL-2,2);
 
     mesh.IXp = iglobP;mesh.Xp = [(1:numel(xNP)).',xNP-1,yNP-1];
-    % mesh.IXv = iglobV;mesh.Xv = [(1:numel(xNV)).',xNV,yNV];
+    mesh.pref_dof = 1;
 
     %% Generate system matrices
     [opt, study] = controller(mesh, study);
@@ -58,30 +71,32 @@ for order = 1:numel(GLL)
     % psol = zeros(length(xxp),1);
     % psol = (xxp-1/2).*(yyp-1/2);
 
-    u_check = [u1
-        u2
-        p];
-    P_check_vec = opt.sys_mat*u_check-opt.P;
+    % u_check = [u1
+    %     u2
+    %     p];
+    % P_check_vec = opt.sys_mat*u_check-opt.P;
+    
+    for i =1:size(opt.U,2)
+        figure(100)
+        clf
+        scatter3(xx,yy,opt.U(1:opt.neqnV,i),'*k')
+        % scatter3(xx,yy,sol1,'or')
 
-    % figure()
-    % scatter3(xx,yy,u1,'*k')
-    % hold on
-    % % scatter3(xx,yy,sol1,'or')
-    % title('U1 velocity')
-    % 
+    end
+    %
     % figure()
     % scatter3(xx,yy,u2,'*k')
     % hold on
     % scatter3(xx,yy,sol2,'or')
     % title('U2 velocity')
-    % 
-    % figure()
-    % scatter3(xxp,yyp,p,'*k')
-    % hold on
+    %
+    figure()
+    scatter3(xxp,yyp,p,'*k')
+    hold on
     % scatter3(xxp,yyp,psol,'or')
-    % title('Pressure')
-    % % scatter3(xxp,yyp,zeros(size(psol)),'or')
-    % 
+    title('Pressure')
+    % scatter3(xxp,yyp,zeros(size(psol)),'or')
+    %
     % figure()
     % scatter3(xx,yy,u_mag,'*k')
     % hold on

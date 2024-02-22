@@ -31,6 +31,13 @@ if isfield(mesh,'bound')
     opt.Null1 = spdiags(Null1,0,opt.neqnV,opt.neqnV);
 end
 
+if strcmp(study.study_type,'unsteady') == 1
+    
+ study.U0 = [repmat(study.U10,opt.neqnV,1);
+     repmat(study.U20,opt.neqnV,1)];
+
+end
+
 %%
 
 I = zeros(opt.nel*ldofv*ldofv,1);
