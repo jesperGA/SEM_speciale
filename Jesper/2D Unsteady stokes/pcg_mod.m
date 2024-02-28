@@ -1,6 +1,6 @@
 function [p] = pcg_mod(A,B,Mh,p0,K1,K2,DE1,DE2)
 max_iter = 50;
-tol = 1e-14;
+tol = 1e-6;
 
 x_old = p0;
 

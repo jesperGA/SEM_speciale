@@ -11,13 +11,6 @@ if strcmp(study.p_type,'roenquist') == 1
     opt.P1 = 2+pi*cos(pi*xx).*sin(pi*yy);
     opt.P2 = pi*sin(pi*xx).*cos(pi*yy);
 elseif strcmp(study.p_type,'bercover') == 1
-    % p1 = @(x,y) 128*(x.^2.*(x-1).*12.*(2.*y-1)+2.*(y-1).*(2.*y-1).*y.*(12.*x.^2-12.*x+2));
-    % opt.P1 = p1(xx,yy);
-    % opt.P2 = p1(yy,xx);
-    % opt.P1 = (1536 .* xx .^ 2 .* (xx - 1) .^ 2 .* (2 .* yy - 1)) + (256 .*...
-    %     (yy - 1) .* (2 .* yy - 1) .* yy .* (12 .* xx .^ 2 - 12 .* xx + 2));
-    % opt.P2 = (1536 .* yy .^ 2 .* (yy - 1) .^ 2 .* (2 .* xx - 1)) + (256 .*...
-    %     (xx - 1) .* (2 .* xx - 1) .* xx .* (12 .* yy .^ 2 - 12 .* yy + 2));
 
     F1 = @(X1,X2) 128 .* (X1.^2 .* (X1 - 1) .^2 .*12 .* (2 .* X2 - 1) + ...
         2 .* (X2 - 1) .* (2 .* X2 - 1) .* X2 .* (12 * X1 .^ 2 - 12 .* X1 + 2))+X2-1/2;
@@ -26,7 +19,9 @@ elseif strcmp(study.p_type,'bercover') == 1
     opt.P1 = F1(xx,yy);
     opt.P2 = F2(xx,yy);
 else
-    error('Load case not defined')
+    disp('No load defined')
+    opt.P1 = zeros(length(xx),1);
+    opt.P2 = zeros(length(yy),1);
 end
 
 if strcmp(study.int_type,'BDFk') == 1
@@ -39,7 +34,7 @@ if strcmp(study.int_type,'BDFk') == 1
     % DEFINE BETA VARIABLES FOR BDF.
     beta = [flip(a_k)/b0, 1/b0];
 
-    H = beta(end)/dt*opt.M+opt.M;
+    H = beta(end)/dt*opt.M+opt.K;
 
     %SET UP GLOBAL MATRICES FOR BCs.
     null_sys = [opt.Null1, zeros(opt.neqnV),zeros(opt.neqnV,opt.neqnP);
@@ -66,29 +61,70 @@ if strcmp(study.int_type,'BDFk') == 1
     BCs = sys_org*g_sys;
 
     U(:,1) = study.U0;
+    opt.Pr(:,1) = zeros(opt.neqnP,1);
+
+    [L,Up,Pp] = lu(sys_mat);
 
     for i = 2:ndt
+        Un = [];
+        Un = [U;zeros(opt.neqnP,1)];
 
-        Un = [U(1:2*opt.neqnV);zeros(opt.neqnP,1)];
-
-
-        P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]-beta(end-1)/dt*Un);
+        P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un);
         P = P-BCs;
         P(~free) = 0;
         P(find(g_sys)) = g_sys(find(g_sys));
-        if strcmp(study.solve_type,'direct') == 1
 
-            U = sys_mat \ (P);
+        if strcmp(study.solve_type,'direct') == 1
+            % spparms('spumoni',1);
+            
+            y = L\(Pp*P);
+            sol = Up\y;
+            % sol = sys_mat \ (P);
+            opt.Pr(:,i) = sol(end-opt.neqnP+1:end);
+            opt.Pr(:,i) = opt.Pr(:,i)-mean(opt.Pr(:,i));
+            opt.U(:,i) = sol(1:2*opt.neqnV);
+            U = sol(1:2*opt.neqnV);
+            % spparms('spumoni',0);
+
 
         elseif strcmp(study.solve_type,'uzawa') == 1
 
+            neqnp = opt.neqnP;
+            neqnv = opt.neqnV;
+
+            D1 = -sys_mat(1:neqnv,2*neqnv+1:end)';
+            D2 = -sys_mat(neqnv+1:2*neqnv,2*neqnv+1:end)';
+            H1 = sys_mat(1:neqnv,1:neqnv);
+            H2 = sys_mat(neqnv+1:2*neqnv,neqnv+1:2*neqnv);
+
+            RHS1 = P(1:neqnv);RHS2 = P(neqnv+1:neqnv*2);RHS3 = P(neqnv*2+1:end);
+            A = D1*(H1\D1')+D2*(H2\D2');
+            B = -D1*(H1\RHS1)-D2*(H2\RHS2)-RHS3;
+
+            A = (A+A')/2;
+
+            if strcmp(study.precon,'mhat') == 1
+
+                p = pcg_mod(A,B,opt.Mh,opt.Pr(:,i-1),H1,H2,D1,D2);
+
+            elseif strcmp(study.precon,'P') == 1
+
+                E = opt.DE1*inv(opt.M)*opt.DE1'+opt.DE2*inv(opt.M)*opt.DE2';
+                Pc = inv(opt.Mh) + 1/dt*inv(E);
+
+                p = pcg_mod(A,B,inv(Pc),opt.Pr(:,i-1),H1,H2,D1,D2);
+                % p = pcg(A,B,1e-6,100,Pc,[],opt.Pr(:,i-1));
+            end
+
+            opt.Pr(:,i) = p;
+            U = [H1 \ (D1'*p + RHS1)
+                H2 \ (D2'*p + RHS2)];
+            opt.U(:,i) = U;
 
 
         end
 
-        opt.Pr(:,i) = U(end-opt.neqnP+1:end);
-        opt.Pr(:,i) = opt.Pr(:,i)-opt.Pr(pref_dof);
-        opt.U(:,i) = U(1:2*opt.neqnV);
+
     end
 else
     disp('Time integration scheme not implemented')

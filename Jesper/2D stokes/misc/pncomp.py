@@ -8,7 +8,7 @@ Pn = pd.read_csv('misc/PnPn_error.csv', header=None).values
 Pn2 = pd.read_csv('misc/PnPn-2_error.csv', header=None).values
 
 # Setting up the plot's appearance and using LaTeX for text rendering
-plt.figure(figsize=[10 , 5])
+plt.figure(figsize=[10 , 6])
 plt.rcParams.update({
     'font.size': 16,
     'text.usetex': True,
@@ -28,9 +28,9 @@ plt.semilogy(Pn2[:,0], Pn2[:,1], '-o', label=r'$u \in \mathbb{P}_N-\mathbb{P}_{N
 plt.semilogy(Pn2[:,0], Pn2[:,2], '-o', label=r'$p \in \mathbb{P}_N-\mathbb{P}_{N-2}$', linewidth=2, markersize=10, color=DC[4])
 
 # Adding labels and legend with LaTeX formatting
-plt.xlabel('$n_{dof}$', fontsize=18, labelpad=20)
+plt.xlabel('$n_{dof}$', fontsize=18, labelpad=10)
 plt.ylabel('$\\| Error \\|_{\infty}$', fontsize=18, labelpad=20)
-plt.legend(loc='upper center', ncol=2, fontsize=18,bbox_to_anchor=(0.5, 1.2))
+plt.legend(loc='upper center', ncol=2, fontsize=18, bbox_to_anchor=(0.5, 1.2))
 
 # Set x-ticks to only display integers
 ax = plt.gca()  # Get current axes
@@ -49,3 +49,4 @@ ax.grid(which='minor', linestyle=':', linewidth='0.5', color='gray')
 # Additional plot customizations
 plt.grid(True)
 plt.show()
+
