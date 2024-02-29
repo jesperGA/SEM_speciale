@@ -74,14 +74,14 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
             P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un);
 
         else
-            J = min(i,3); %Define order of Adam bashforth. Will make sure we dont exceed array limits. 
+            J = min(i,3); %Define order of Adam bashforth. Will make sure we dont exceed array limits.
             CV = 0;
             for j=1:J
                 C_temp = adv_mat_assembly(mesh,opt,study,U);
                 CV = CV+AB_facs(j)*C_temp;
 
             end
-        
+
             P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un)-study.RE*CV;
 
         end
@@ -91,15 +91,19 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
         P(find(g_sys)) = g_sys(find(g_sys));
 
         if strcmp(study.solve_type,'direct') == 1
-
-            y = L\(Pp*P);
-            sol = Up\y;
-            % sol = sys_mat \ (P);
+            if strcmp(study.direct_type,'LU') == 1
+                y = L\(Pp*P);
+                sol = Up\y;
+            elseif strcmp(study.direct_type,'backslash') == 1
+                sol = sys_mat \ (P);
+            else
+                y = L\(Pp*P);
+                sol = Up\y;
+            end
             opt.Pr(:,i) = sol(end-opt.neqnP+1:end);
             opt.Pr(:,i) = opt.Pr(:,i)-mean(opt.Pr(:,i));
             opt.U(:,i) = sol(1:2*opt.neqnV);
             U = sol(1:2*opt.neqnV);
-
 
         elseif strcmp(study.solve_type,'uzawa') == 1
 
