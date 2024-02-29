@@ -99,7 +99,11 @@ for e = 1:opt.nel
     xp = reshape(xyp(:,1),Np+1,Np+1);
     yp = reshape(xyp(:,2),Np+1,Np+1);
 
-    [me,ke,de,mhat] = twoD_element_matrices(x,y,xp,yp,[],[],n_GLL,w,wp,xi,zeta);
+    [me,ke,deP,mhat,deV] = twoD_element_matrices(x,y,xp,yp,[],[],n_GLL,w,wp,xi,zeta);
+    opt.ME(:,:,e) = me;
+    opt.DE1v(:,:,e) = deV{1};
+    opt.DE2v(:,:,e) = deV{2};
+ 
 
     for krow = 1:ldofv
         for kcol = 1:ldofv
@@ -118,8 +122,8 @@ for e = 1:opt.nel
             ntripletsP =ntripletsP+1;
             Ip(ntripletsP) = edofP(prow);
             Jp(ntripletsP) = edofV(kcol);
-            DE1(ntripletsP) = de{1}(prow,kcol);
-            DE2(ntripletsP) = de{2}(prow,kcol);
+            DE1(ntripletsP) = deP{1}(prow,kcol);
+            DE2(ntripletsP) = deP{2}(prow,kcol);
         end
     end
 

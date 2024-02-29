@@ -24,7 +24,7 @@ else
     opt.P2 = zeros(length(yy),1);
 end
 
-if strcmp(study.int_type,'BDFk') == 1
+if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
     gamma = [1, 1 , 1];
     b0 = gamma(2)/gamma(1);
     a_k = gamma(3:end)./gamma(1);
@@ -33,6 +33,8 @@ if strcmp(study.int_type,'BDFk') == 1
 
     % DEFINE BETA VARIABLES FOR BDF.
     beta = [flip(a_k)/b0, 1/b0];
+
+    AB_facs = [23/12, -4/3, 5/12];
 
     H = beta(end)/dt*opt.M+opt.K;
 
@@ -68,15 +70,28 @@ if strcmp(study.int_type,'BDFk') == 1
     for i = 2:ndt
         Un = [];
         Un = [U;zeros(opt.neqnP,1)];
+        if strcmp(study.int_type,'BDFk') == 1
+            P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un);
 
-        P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un);
+        else
+            J = min(i,3); %Define order of Adam bashforth. Will make sure we dont exceed array limits. 
+            CV = 0;
+            for j=1:J
+                C_temp = adv_mat_assembly(mesh,opt,study,U);
+                CV = CV+AB_facs(j)*C_temp;
+
+            end
+        
+            P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un)-study.RE*CV;
+
+        end
+
         P = P-BCs;
         P(~free) = 0;
         P(find(g_sys)) = g_sys(find(g_sys));
 
         if strcmp(study.solve_type,'direct') == 1
-            % spparms('spumoni',1);
-            
+
             y = L\(Pp*P);
             sol = Up\y;
             % sol = sys_mat \ (P);
@@ -84,7 +99,6 @@ if strcmp(study.int_type,'BDFk') == 1
             opt.Pr(:,i) = opt.Pr(:,i)-mean(opt.Pr(:,i));
             opt.U(:,i) = sol(1:2*opt.neqnV);
             U = sol(1:2*opt.neqnV);
-            % spparms('spumoni',0);
 
 
         elseif strcmp(study.solve_type,'uzawa') == 1
@@ -126,6 +140,7 @@ if strcmp(study.int_type,'BDFk') == 1
 
 
     end
+
 else
     disp('Time integration scheme not implemented')
 end

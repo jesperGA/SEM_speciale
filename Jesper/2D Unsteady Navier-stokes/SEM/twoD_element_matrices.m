@@ -1,10 +1,10 @@
-function [me,ke,de,mhat] = twoD_element_matrices(x,y,xp,yp,E,dens,n_gll,w,wp,xi,zeta)
+function [me,ke,de,mhat,deV] = twoD_element_matrices(x,y,xp,yp,E,dens,n_gll,w,wp,xi,zeta)
 
 % ldof = numel(x);
 
 ke = zeros([n_gll*n_gll,n_gll*n_gll]);
 me = ke; %de{1} = ke;de{2} = ke;
-
+% deV = ke; %Initilization of divergence/gradient matrix for v-grid.
 
 L1 = x(end,1)-x(1,1);
 L2 = y(1,end)-y(1,1);
@@ -19,10 +19,10 @@ mhat = zeros(N_gl,N_gl);
 for i = 1:N+1
     for j = 1:N+1
         dl(i,j) = dlagrange(xi,N,j,i);
+        Ip(i,j) = w(i)*w(j)*cardinalP(xi,i,xi(j));
     end
 end
 % dl = dl;
-
 
 [dJ,xr,xs,yr,ys] = Jac2D(x,y,dl,N);
 gradl = zeros([n_gll,n_gll,n_gll,n_gll,2]);
@@ -50,7 +50,6 @@ for i = 1:n_gll
                 for p = 1:n_gll
                     for q=1:n_gll
                         ke(row,col) =ke(row,col) + w(p)*w(q)*(1/dJ(p,q))*dot(gradl(p,q,i,j,:),gradl(p,q,m,n,:));
-
                     end
                 end
                 me(row,col) = w(i)*w(j)*abs(dJ(i,j))*kroen(i,m)*kroen(j,n);
@@ -59,6 +58,16 @@ for i = 1:n_gll
         end
     end
 end
+
+%Calculate dJ*w*cardinal for all GLL. in doubt of the addition dJ. 
+for i = 1:N+1
+    for j = 1:N+1
+        Ip(i,j) = w(j)*cardinalP(xi,i,xi(j));
+    end
+end
+%Derivative matrix on the V-grid
+deV{1} = 2/L2.*kron(Ip,dl);deV{2} = 2/L1.*kron(dl,Ip);
+
 
 %%
 %CALCULATE dlP, the derivative of the lagrange polynomial from v in the p
@@ -71,13 +80,14 @@ for i =1:N+1
     dlP(:,i) =wp.*LagrangeFormInterpolation(xi,dl(:,i).',zeta).';
 end
 
-%Only for rectlinear elements.
+%Only for rectlinear elements. 
 for i = 1:N_gl
     for j = 1:N_gl
         for m = 1:N_gl
             for n = 1:N_gl
                 row = (i-1)*N_gl + j;
                 col = (m-1)*N_gl + n;
+                %Diaganol pressure mass matrix
                 mhat(row,col) = wp(i)*wp(j)*abs(dJ(i,j))*kroen(i,m)*kroen(j,n);
             end
         end
@@ -93,10 +103,10 @@ de{1} = kron(L2/2.*I_tilde,dlP);de{2} = kron(L1/2.*dlP,I_tilde);
 %                 % Compute row and column indices for mapping into C
 %                 row = (i-1)*(N_gl) + m;
 %                 col = (j-1)*(N+1) + n;
-%
+% 
 %                 % Compute the Kronecker product and insert into C
-%                 de{1}(row, col) = dJ(i,m)*I_tilde(i, j) * dlP(m, n);
-%                 de{2}(row, col) = dJ(m,i)*dlP(i,j)*I_tilde(m,n);
+%                 de{1}(row, col) = (2/dJ(i,m))*I_tilde(i, j) * dlP(m, n);
+%                 de{2}(row, col) = (2/dJ(m,i))*dlP(i,j)*I_tilde(m,n);
 %             end
 %         end
 %     end
