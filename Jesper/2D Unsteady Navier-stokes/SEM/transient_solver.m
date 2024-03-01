@@ -64,7 +64,7 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
 
     U(:,1) = study.U0;
     opt.Pr(:,1) = zeros(opt.neqnP,1);
-
+    opt.U(:,1) = U(:,1);
     [L,Up,Pp] = lu(sys_mat);
 
     for i = 2:ndt
@@ -74,10 +74,10 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
             P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un);
 
         else
-            J = min(i,3); %Define order of Adam bashforth. Will make sure we dont exceed array limits.
+            J = min(i-1,3); %Define order of Adam bashforth. Will make sure we dont exceed array limits.
             CV = 0;
             for j=1:J
-                C_temp = adv_mat_assembly(mesh,opt,study,U);
+                C_temp = adv_mat_assembly(mesh,opt,study,opt.U(:,i-j));
                 CV = CV+AB_facs(j)*C_temp;
 
             end
@@ -138,6 +138,10 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
             U = [H1 \ (D1'*p + RHS1)
                 H2 \ (D2'*p + RHS2)];
             opt.U(:,i) = U;
+
+            if any(isnan(U)) || any(isnan(p)) 
+                error('Velocity field or Pressure field contains NaN values - Field diverged');
+            end
 
 
         end
