@@ -25,17 +25,26 @@ if isfield(mesh,'bound')
             Null2(1*mesh.bound(i,1)) = 0;
             opt.g2(1*mesh.bound(i,1)) = mesh.bound(i,3);
         end
-        opt.g(1*mesh.bound(i,1)) = mesh.bound(i,3);
+        if strcmp(study.BC_type,'static') == 1
+            opt.g(1*mesh.bound(i,1)) = mesh.bound(i,3);
+        elseif strcmp(study.BC_type,'dynamic') == 1
+            opt.g_sys = @(x,y,t) [-cos(x).*sin(y).*exp(-2.*t);
+                sin(x).*cos(y).*exp(-4.*t)];
+        end
     end
     opt.Null2 = spdiags(Null2,0,opt.neqnV,opt.neqnV);
     opt.Null1 = spdiags(Null1,0,opt.neqnV,opt.neqnV);
 end
 
 if strcmp(study.study_type,'unsteady') == 1
-    
- study.U0 = [repmat(study.U10,opt.neqnV,1);
-     repmat(study.U20,opt.neqnV,1)];
 
+
+    if strcmp(study.p_type,'liddriven') == 1
+    study.U0 = [repmat(study.U10,opt.neqnV,1);
+        repmat(study.U20,opt.neqnV,1)];
+    elseif strcmp(study.p_type,'roenquist2') == 1
+    study.U0 = opt.g_sys(mesh.Xv(:,2),mesh.Xv(:,3),study.t(1));
+    end
 end
 
 %%
@@ -67,6 +76,8 @@ zeta = study.zeta;
 wp = study.wp;
 
 for e = 1:opt.nel
+    
+    fprintf('Assembling element %d of %d\r', e, opt.nel);
 
     nenV = mesh.IXv(:,:,e);
     nenV = nenV(:);
@@ -103,7 +114,7 @@ for e = 1:opt.nel
     opt.ME(:,:,e) = me;
     opt.DE1v(:,:,e) = deV{1};
     opt.DE2v(:,:,e) = deV{2};
- 
+
 
     for krow = 1:ldofv
         for kcol = 1:ldofv
@@ -136,6 +147,7 @@ for e = 1:opt.nel
             Mh(ntripletsP2) = mhat(prow,pcol);
         end
     end
+clc
 end
 ind = find(I>0);
 indp = find(Ip>0);

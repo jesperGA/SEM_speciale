@@ -25,6 +25,7 @@ end
 % study.solve_type = 'uzawa';
 study.study_type = 'unsteady';
 study.precon = 'P';
+study.BC_type = 'static';
 % study.study_t ype = 'steady';
 if strcmp(study.study_type,'unsteady') == 1
     study.T = 0.2;
@@ -92,3 +93,8 @@ for i = 1:numel(RE)
     plot(opt.U(x2_ind,end),yy(x2_ind),'-o');
 
 end
+
+% Labeling with LaTeX Interpreter
+xlabel('Horizontal Velocity, $u$', 'Interpreter', 'latex', 'FontSize', 18);
+ylabel('Y-Position at $X=0.5$', 'Interpreter', 'latex', 'FontSize', 18);
+title('Y-Position at $X=0.5$ vs. Horizontal Velocity', 'Interpreter', 'latex', 'FontSize', 18);

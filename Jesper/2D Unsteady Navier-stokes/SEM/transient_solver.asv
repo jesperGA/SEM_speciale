@@ -69,20 +69,12 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
     opt.U(:,1) = U;
     [L,Up,Pp] = lu(sys_mat);
 
-    % fprintf('Solver status:') %For AeStheTics
-    prev_mes = 0;
+    fprintf('Solver status:') %For AeStheTics
     for i = 2:ndt
-        %% For AeStheTics
-        if mod(i,500) ==0
-            status_procent = (i/ndt)*100;
-            fprintf('Solver status: %3.1f%%\n',status_procent);
-            % back_space = repmat('\b',1,prev_mes-1);
-            % fprintf(back_space)
-            % fprintf(mess)
-            % prev_mes = length(mess);
+        if mod(i,500)
+            status_procent = (i/nt)*100;
 
         end
-        %%
         
         Un = [];
         Un = [U;zeros(opt.neqnP,1)];
