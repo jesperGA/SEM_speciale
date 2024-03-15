@@ -22,6 +22,9 @@ if strcmp(study.solve_type,'direct') == 1
     study.direct_type = 'LU';
 
 end
+study.P_order = 'PnPn-2';
+study.P_order = 'PnPn';
+
 % study.solve_type = 'uzawa';
 study.study_type = 'unsteady';
 % study.precon = 'mhat';
