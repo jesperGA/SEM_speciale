@@ -62,11 +62,11 @@ end
 %Calculate dJ*w*cardinal for all GLL. in doubt of the addition dJ. 
 for i = 1:N+1
     for j = 1:N+1
-        Ip(i,j) = w(j)*cardinalP(xi,i,xi(j));
+        Ip(i,j) = cardinalP(xi,i,xi(j));
     end
 end
 %Derivative matrix on the V-grid
-deV{1} = 2/L2.*kron(Ip,dl);deV{2} = 2/L1.*kron(dl,Ip);
+deV{1} = 2/L1.*kron(Ip,dl);deV{2} = 2/L2.*kron(dl,Ip);
 
 
 %%

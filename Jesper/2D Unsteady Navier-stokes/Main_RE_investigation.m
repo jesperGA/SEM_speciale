@@ -12,26 +12,26 @@ addpath('misc')
 
 % mat = [1.1,1.2,1.3,1.4;
 %     1.1,1.2,1.3,1.4];
-% study.p_type = 'roenquist';
+study.p_type = 'roenquist2';
 % study.p_type = 'bercover';
 study.p_type = 'liddriven';
 study.solve_type = 'direct'; %uzawa
 if strcmp(study.solve_type,'direct') == 1
 
-    study.direct_type = 'backslash';
-    % study.direct_type = 'LU';
+    % study.direct_type = 'backslash';
+    study.direct_type = 'LU';
 
 end
 % study.solve_type = 'uzawa';
 study.study_type = 'unsteady';
 study.precon = 'P';
-study.BC_type = 'static';
+% study.BC_type = 'static';
+study.BC_type = 'dynamic';
+
 % study.study_t ype = 'steady';
 if strcmp(study.study_type,'unsteady') == 1
-    study.T = 0.2;
-    study.nt = 2000;
-    study.t = linspace(0,study.T,study.nt);
-    study.dt = (study.t(2)-study.t(1));
+    study.T = 1;
+
 
     % study.int_type = 'BDFk'; %Equivalent of solving Unsteady stokes.
     study.int_type = 'BDF1AB3'; %First order bdf for linear terms. 3 order for nonlinear terms.
@@ -71,12 +71,23 @@ fprintf('Time for assembly: %2.3f seconds\n',dt)
 figure(99)
 hold on
 
-for i = 1:numel(RE)
+dts = logspace(-6,-1,5);
+dts = [1e-1 4e-2 2e-2 1e-2 5e-3 2e-3,5e-4,1e-4,5e-5];
+
+p_sol = @(x,y,t) -1/4.*(cos(2.*x)+cos(2.*y)).*exp(-4.*t);
+
+
+for i = 1:numel(dts)
+
+    dt = dts(i);
+    study.t = 0:dt:study.T;
+    study.nt = length(study.t);
+    study.dt = (study.t(2)-study.t(1));
     tic
-    study.RE = RE(i);
+    study.RE = 1;
     opt = transient_solver(opt,study,mesh);
-    dt = toc;
-    fprintf('Time for solution @RE=%4.2f: %2.3f seconds',RE(i),dt)
+    solve_tim = toc;
+    fprintf('Time for solution @dt=%4.2e: %2.3f seconds \n',dts(i),solve_tim)
 
 
     %%
@@ -85,16 +96,29 @@ for i = 1:numel(RE)
 
     %% Analytical solution, validation and plots
     xx = mesh.Xv(:,2);yy = mesh.Xv(:,3);
-    x2_ind = find(xx==0.5);
     xxp = mesh.Xp(:,2);yyp = mesh.Xp(:,3);
 
+    for k =1:size(opt.U,2)
+        sol = opt.g_sys(xx,yy,study.t(k));
+        diff = mean(opt.Pr(:,k)-p_sol(xxp,yyp,study.t(k)));
+        P_plot = opt.Pr(:,k)-diff;
+        err = norm(sol-opt.U(:,k),1);
+        errp = norm(P_plot-p_sol(xxp,yyp,study.t(k)),1);
+    end
 
-    figure(99)
-    plot(opt.U(x2_ind,end),yy(x2_ind),'-o');
+    errorp(i) = errp;
+    error(i) = err;
 
 end
 
 % Labeling with LaTeX Interpreter
-xlabel('Horizontal Velocity, $u$', 'Interpreter', 'latex', 'FontSize', 18);
-ylabel('Y-Position at $X=0.5$', 'Interpreter', 'latex', 'FontSize', 18);
-title('Y-Position at $X=0.5$ vs. Horizontal Velocity', 'Interpreter', 'latex', 'FontSize', 18);
+figure();loglog(dts,error,'-ok','LineWidth',3)
+hold on
+loglog(dts,errorp,'-oy','LineWidth',3)
+
+xlabel('$n_{dof}$', 'Interpreter', 'latex', 'FontSize', 18);
+ylabel('$\| u-u_{corr} \|_{1}$ Error', 'Interpreter', 'latex', 'FontSize', 18);
+
+legend('Velocity','Pressure','Interpreter','latex','FontSize',18)
+grid on
+

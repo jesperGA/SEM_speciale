@@ -1,18 +1,21 @@
-function [Cv] = adv_mat_assembly(mesh,opt,study,U)
+function [Cv] = adv_mat_assembly(IXv,ME,DE1v,DE2v,n_GLL,neqn,U)
+neqnV = neqn(1);
+neqnP = neqn(2);
 
-n_GLL = study.n_GLL;
+nel = size(ME,3);
+
 ldof = (n_GLL)^2;
 
-U1 = U(1:opt.neqnV);U2 = U(opt.neqnV+1:end);
+U1 = U(1:neqnV);U2 = U(neqnV+1:end);
 
 ntriplets = 0;
 
-I = zeros(opt.nel*ldof*ldof,1);
-J = zeros(opt.nel*ldof*ldof,1);
-CE = zeros(opt.nel*ldof*ldof,1);
+I = zeros(nel*ldof*ldof,1);
+J = zeros(nel*ldof*ldof,1);
+CE = zeros(nel*ldof*ldof,1);
 
-for e = 1:opt.nel
-    nen = mesh.IXv(:,:,e);
+for e = 1:nel
+    nen = IXv(:,:,e);
     nen = nen(:);
 
     edof = zeros(ldof,1);
@@ -22,9 +25,9 @@ for e = 1:opt.nel
     v1 = sparse(1:ldof,1:ldof,U1(edof),ldof,ldof);
     v2 = sparse(1:ldof,1:ldof,U2(edof),ldof,ldof);
     
-    me = opt.ME(:,:,e);
-    de1 = opt.DE1v(:,:,e);
-    de2 = opt.DE2v(:,:,e);
+    me = ME(:,:,e);
+    de1 = DE1v(:,:,e);
+    de2 = DE2v(:,:,e);
 
     ce = me*(v1*de1+v2*de2);
     
@@ -40,10 +43,10 @@ for e = 1:opt.nel
 
 end
 ind = find(I>0);
-C_temp = sparse(I(ind),J(ind),CE(ind),opt.neqnV,opt.neqnV);
+C_temp = sparse(I(ind),J(ind),CE(ind),neqnV,neqnV);
 Cv =[C_temp*U1;
     C_temp*U2
-    sparse(opt.neqnP,1)];
+    sparse(neqnP,1)];
 
 
 end

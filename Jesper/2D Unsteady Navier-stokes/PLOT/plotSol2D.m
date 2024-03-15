@@ -22,7 +22,7 @@ xticks(unique(sort(mesh.Xv(:, 2))));
 yticks(unique(sort(mesh.Xv(:, 2))));
 xtickformat('%.2f');
 ytickformat('%.2f');
-constant = 0.1;
+constant = 0.5;
 xlim([min(mesh.Xv(:,2))-constant, max(mesh.Xv(:,2))+constant]);
 ylim([min(mesh.Xv(:,3))-constant, max(mesh.Xv(:,3))+constant]);
 
@@ -48,7 +48,7 @@ axis off
 hold on
 scale_factor = 'off'; % Adjust the scale factor as needed
 if flag ==0
-    quiver(mesh.Xv(:,2), mesh.Xv(:,3), u1, u2, scale_factor, 'Color', defaultColors(1,:))
+    quiver(mesh.Xv(:,2), mesh.Xv(:,3), u1, u2, scale_factor, 'Color', defaultColors(1,:),'LineWidth',1.5)
 else
     quiver(mesh.Xv(:,2), mesh.Xv(:,3), u1, u2, scale_factor, 'Color', defaultColors(2,:))
 end

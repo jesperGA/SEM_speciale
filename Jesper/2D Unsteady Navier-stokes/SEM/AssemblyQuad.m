@@ -29,7 +29,7 @@ if isfield(mesh,'bound')
             opt.g(1*mesh.bound(i,1)) = mesh.bound(i,3);
         elseif strcmp(study.BC_type,'dynamic') == 1
             opt.g_sys = @(x,y,t) [-cos(x).*sin(y).*exp(-2.*t);
-                sin(x).*cos(y).*exp(-4.*t)];
+                sin(x).*cos(y).*exp(-2.*t)];
         end
     end
     opt.Null2 = spdiags(Null2,0,opt.neqnV,opt.neqnV);

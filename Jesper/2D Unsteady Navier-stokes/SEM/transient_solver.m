@@ -35,9 +35,12 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
     beta = [flip(a_k)/b0, 1/b0];
 
     AB_facs = [23/12, -4/3, 5/12];
-
-    H = beta(end)/dt*opt.M+opt.K;
-
+    if isfield(mesh,'material') && length(mesh.material) >= 2
+        rho = mesh.material(1); mu = mesh.material(2);
+        H = rho*beta(end)/dt*opt.M+mu*opt.K;
+    else
+        H = beta(end)/dt*opt.M+opt.K;
+    end
     %SET UP GLOBAL MATRICES FOR BCs.
     null_sys = [opt.Null1, zeros(opt.neqnV),zeros(opt.neqnV,opt.neqnP);
         zeros(opt.neqnV),opt.Null2,zeros(opt.neqnV,opt.neqnP);
@@ -63,50 +66,61 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
 
         BCs = sys_org*g_sys;
     end
+    opt.U = zeros(opt.neqnV*2,ndt);
+    opt.P = zeros(opt.neqnP,ndt);
 
     U = study.U0;
     opt.Pr(:,1) = zeros(opt.neqnP,1);
     opt.U(:,1) = U;
+    disp('Factorizing system matrix')
+    tic;
     [L,Up,Pp] = lu(sys_mat);
+    fprintf('Done factorizing. Time: %2.2f seconds\n',toc);
+
 
     % fprintf('Solver status:') %For AeStheTics
     prev_mes = 0;
+    fprintf('Solver status: ')
+
+    %For advection matrix
+    IXv = mesh.IXv;ME = opt.ME;DE1v = opt.DE1v;DE2v = opt.DE2v; n_GLL = study.n_GLL;
+    Cold = sparse(2*opt.neqnV+opt.neqnP,1);
+    Coldold  = Cold;
     for i = 2:ndt
         %% For AeStheTics
         if mod(i,500) ==0
             status_procent = (i/ndt)*100;
-            fprintf('Solver status: %3.1f%%\n',status_procent);
-            % back_space = repmat('\b',1,prev_mes-1);
-            % fprintf(back_space)
-            % fprintf(mess)
-            % prev_mes = length(mess);
+            mess = sprintf('%3.2f percent',status_procent);
+            back_space = repmat('\b',1,prev_mes);
+            fprintf(back_space);
+            fprintf(mess);
+            prev_mes = length(mess);
 
         end
         %%
-        
+
         Un = [];
         Un = [U;zeros(opt.neqnP,1)];
         if strcmp(study.int_type,'BDFk') == 1
             P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un);
 
         else
-            J = min(i-1,3); %Define order of Adam bashforth. Will make sure we dont exceed array limits.
-            CV = 0;
-            for j=1:J
-                %Assemble convection matrix
-                C_temp = adv_mat_assembly(mesh,opt,study,opt.U(:,i-j));
-                CV = CV+AB_facs(j)*C_temp;
+            C = adv_mat_assembly_mex(IXv,ME,DE1v,DE2v,n_GLL,[opt.neqnV,opt.neqnP],opt.U(:,i-1));
+            % C_= adv_mat_assembly(IXv,ME,DE1v,DE2v,n_GLL,[opt.neqnV,opt.neqnP],opt.U(:,i-j));
 
+            CV = AB_facs(1)*C+AB_facs(2)*Cold+AB_facs(3)*Coldold;
+            Cold = C; Coldold = Cold;
+
+            if isfield(mesh,'material') && length(mesh.material)>=2
+                P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(rho*beta(end-1)/dt)*Un)-rho*CV;
+            else
+                P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un)-study.RE*CV;
             end
-
-            P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un)-study.RE*CV;
-
         end
 
 
         if strcmp(study.BC_type,'dynamic') == 1
             g_sys = [opt.g_sys(xx,yy,study.t(i));zeros(opt.neqnP,1)];
-            % differencen = norm(opt.g_sys(xx,yy,study.t(i))-opt.g_sys(xx,yy,study.t(i-1)))
             g_sys(free==1) = 0;
             BCs = sys_org*g_sys;
         end
@@ -143,7 +157,7 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
             A = D1*(H1\D1')+D2*(H2\D2');
             B = -D1*(H1\RHS1)-D2*(H2\RHS2)-RHS3;
 
-            A = (A+A')/2;
+            A = (A+A')/2; %Enforce strict symmetry
 
             if strcmp(study.precon,'mhat') == 1
 
