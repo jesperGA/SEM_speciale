@@ -18,10 +18,10 @@ for i = 1:numel(GLL)
     study.xi = xi;study.w = w;study.n_GLL = n_GLL;
     mesh = [];
     mesh = regular_bragg_grating(L,3,n_GLL,mat,study);
-    mesh.X(:,2) = linspace(mesh.X(1,2),mesh.X(end,2),length(mesh.X));
+    % mesh.X(:,2) = linspace(mesh.X(1,2),mesh.X(end,2),length(mesh.X));
     
-    study.xi = linspace(-1,1,n_GLL);
-    study.w(:) = sum(w)/length(study.xi);
+    % study.xi = linspace(-1,1,n_GLL);
+    % study.w(:) = sum(w)/length(study.xi);
     % figure(1)
     % plot(mesh.X(:,2),ones(size(mesh.X,1)),'ok');
 
@@ -41,6 +41,8 @@ for i = 1:numel(GLL)
 
     xx = linspace(0,pi,200);
     analytical = -sin(xx);
+
+    sol = -sin(xv);
     
     [data] = oneD_element_interpolator(mesh,u);
     analytical2 = -sin(data(:,1));
@@ -59,7 +61,7 @@ for i = 1:numel(GLL)
         title(['order = ',num2str(n_GLL-1)])
     end
 
-    err(i) = norm(analytical - u,2);
+    err(i) = norm(sol - u,2);
     err2(i) = norm(analytical2-data(:,2),2);
 
 

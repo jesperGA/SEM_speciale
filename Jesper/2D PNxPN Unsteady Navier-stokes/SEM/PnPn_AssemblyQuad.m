@@ -1,15 +1,12 @@
-function [opt,study] = AssemblyQuad(mesh,opt,study)
+function [opt,study] = PnPn_AssemblyQuad(mesh,opt,study)
 
 n_GLL = study.n_GLL; %Specify number of GLL points
-n_GL = study.n_GL;
-Nv = n_GLL-1;
-Np = n_GL-1;
-ldofv =(n_GLL^2); %One dof per gll in every element
-ldofp = (n_GL^2);
+N = n_GLL-1;
+ldof =(n_GLL^2); %One dof per gll in every element
 
 opt.nel = size(mesh.IXp,3);
 opt.neqnV = size(mesh.Xv,1);
-opt.neqnP = size(mesh.Xp,1);
+opt.neqnP = opt.neqnV;
 
 %% Boundary conditions
 if isfield(mesh,'bound')
@@ -49,31 +46,19 @@ end
 
 %%
 
-I = zeros(opt.nel*ldofv*ldofv,1);
-J = zeros(opt.nel*ldofv*ldofv,1);
-KE = zeros(opt.nel*ldofv*ldofv,1);
-ME = zeros(opt.nel*ldofv*ldofv,1);
-
-Ip = zeros(opt.nel*ldofv*ldofp,1);
-Jp = zeros(opt.nel*ldofv*ldofp,1);
-DE1 = zeros(opt.nel*ldofv*ldofp,1);
-DE2 = zeros(opt.nel*ldofv*ldofp,1);
-
-Mh = zeros(opt.nel*ldofp*ldofp,1);
-Ip2 = Mh;
-Jp2 = Mh;
-
-
+I = zeros(opt.nel*ldof*ldof,1);
+J = zeros(opt.nel*ldof*ldof,1);
+KE = zeros(opt.nel*ldof*ldof,1);
+ME = zeros(opt.nel*ldof*ldof,1);
+DE1 = zeros(opt.nel*ldof*ldof,1);
+DE2 = zeros(opt.nel*ldof*ldof,1);
+DD1 = zeros(opt.nel*ldof*ldof,1);
+DD2 = zeros(opt.nel*ldof*ldof,1);
 ntriplets = 0;
-ntripletsP = 0;
-ntripletsP2 = 0;
-
 
 %Define GLL weights and points. Collected from study struct.
 w = study.w;
 xi = study.xi;
-zeta = study.zeta;
-wp = study.wp;
 
 for e = 1:opt.nel
     
@@ -82,82 +67,47 @@ for e = 1:opt.nel
     nenV = mesh.IXv(:,:,e);
     nenV = nenV(:);
 
-    nenP = mesh.IXp(:,:,e);
-    nenP = nenP(:);
-
-    % generate edof
-    % for i = 1:length(nen)
-    %     edof(2*i-1) = 2*nen(i)-1;
-    %     edof(2*i-0) = 2*nen(i)-0;
-    % end
-    %Calculate dofs for each elements.
-    edofP = zeros(ldofp,1);
-    indicesP = 1:length(nenP);
-    edofP(indicesP) = nenP;
-
-    edofV = zeros(ldofv,1);
+    edofV = zeros(ldof,1);
     indicesV = 1:length(nenV);
     edofV(indicesV) = nenV;
     %Find x and y for each node.
     xy = mesh.Xv(nenV,2:3);
-    x = reshape(xy(:,1),Nv+1,Nv+1);
-    y = reshape(xy(:,2),Nv+1,Nv+1);
+    x = reshape(xy(:,1),N+1,N+1);
+    y = reshape(xy(:,2),N+1,N+1);
 
-    % x = fliplr(x);y=fliplr(y);
-    % matID = mesh.IX(e,end);
 
-    xyp = mesh.Xp(nenP,2:3);
-    xp = reshape(xyp(:,1),Np+1,Np+1);
-    yp = reshape(xyp(:,2),Np+1,Np+1);
-
-    [me,ke,deP,mhat,deV] = twoD_element_matrices(x,y,xp,yp,[],[],n_GLL,w,wp,xi,zeta);
+    [me,ke,de,dde] = PnPn_twoD_element_matrices(x,y,n_GLL,w,xi);
     opt.ME(:,:,e) = me;
-    opt.DE1v(:,:,e) = deV{1};
-    opt.DE2v(:,:,e) = deV{2};
+    opt.DE1v(:,:,e) = de{1};
+    opt.DE2v(:,:,e) = de{2};
 
 
-    for krow = 1:ldofv
-        for kcol = 1:ldofv
+    for krow = 1:ldof
+        for kcol = 1:ldof
             ntriplets = ntriplets+1;
             I(ntriplets) = edofV(krow);
             J(ntriplets) = edofV(kcol);
             KE(ntriplets) = ke(krow,kcol);
+            DE1(ntriplets) = de{1}(krow,kcol);
+            DE2(ntriplets) = de{2}(krow,kcol);
+            DD1(ntriplets) = dde{1}(krow,kcol);
+            DD2(ntriplets) = dde{2}(krow,kcol);
             % mass matrix
             ME(ntriplets) = me(krow,kcol);
 
         end
     end
 
-    for prow=1:ldofp
-        for kcol = 1:ldofv
-            ntripletsP =ntripletsP+1;
-            Ip(ntripletsP) = edofP(prow);
-            Jp(ntripletsP) = edofV(kcol);
-            DE1(ntripletsP) = deP{1}(prow,kcol);
-            DE2(ntripletsP) = deP{2}(prow,kcol);
-        end
-    end
-
-
-    for prow = 1:ldofp
-        for pcol = 1:ldofp
-            ntripletsP2 =ntripletsP2+1;
-            Ip2(ntripletsP2) = edofP(prow);
-            Jp2(ntripletsP2) = edofP(pcol);
-            Mh(ntripletsP2) = mhat(prow,pcol);
-        end
-    end
 clc
 end
 ind = find(I>0);
-indp = find(Ip>0);
-indp2 = find(Ip2>0);
 opt.K = sparse(I(ind),J(ind),KE(ind),opt.neqnV,opt.neqnV);
 opt.M = sparse(I(ind),J(ind),ME(ind),opt.neqnV,opt.neqnV);
+opt.DE1 = sparse(I(ind),J(ind),DE1(ind),opt.neqnV,opt.neqnV);
+opt.DE2 = sparse(I(ind),J(ind),DE2(ind),opt.neqnV,opt.neqnV);
+opt.DD1 = sparse(I(ind),J(ind),DD1(ind),opt.neqnV,opt.neqnV);
+opt.DD2 = sparse(I(ind),J(ind),DD2(ind),opt.neqnV,opt.neqnV);
 % opt.P = sparse(opt.neqnV,1);
-opt.DE1 = sparse(Ip(indp),Jp(indp),DE1(indp),opt.neqnP,opt.neqnV);
-opt.DE2 = sparse(Ip(indp),Jp(indp),DE2(indp),opt.neqnP,opt.neqnV);
-opt.Mh = sparse(Ip2(indp2),Jp2(indp2),Mh(indp2),opt.neqnP,opt.neqnP);
 % Initial conditions for transient problem.
 
 end

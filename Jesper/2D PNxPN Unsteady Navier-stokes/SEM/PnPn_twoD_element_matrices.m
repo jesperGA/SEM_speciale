@@ -1,46 +1,53 @@
-function [me,ke,de,mhat,deV] = PnPn_twoD_element_matrices(x,y,xp,yp,E,dens,n_gll,w,wp,xi,zeta)
+function [me,ke,de,dde] = PnPn_twoD_element_matrices(x,y,n_gll,w,xi)
 
 % ldof = numel(x);
 
 ke = zeros([n_gll*n_gll,n_gll*n_gll]);
 me = ke; %de{1} = ke;de{2} = ke;
-% deV = ke; %Initilization of divergence/gradient matrix for v-grid.
+de{1} = ke;de{2} = ke; %Initilization of divergence/gradient matrix for v-grid.
 
 L1 = x(end,1)-x(1,1);
 L2 = y(1,end)-y(1,1);
 
-
-
 N=n_gll-1;
-N_gl = numel(wp);
-mhat = zeros(N_gl,N_gl);
+% N_gl = numel(wp);
 % Calc all langragian derivatives: MAYBE CALCULATE EVEN FURTHER BACK? iS
 % THE SAME FOR ALL ELEMENTS.
 for i = 1:N+1
     for j = 1:N+1
         dl(i,j) = dlagrange(xi,N,j,i);
-        Ip(i,j) = w(i)*w(j)*cardinalP(xi,i,xi(j));
+        ddl (i,j) = ddlagrange(xi,N,i,j);
+        % Ip(i,j) = w(i)*w(j)*cardinalP(xi,i,xi(j));
     end
 end
 % dl = dl;
 
 [dJ,xr,xs,yr,ys] = Jac2D(x,y,dl,N);
 gradl = zeros([n_gll,n_gll,n_gll,n_gll,2]);
+grad2l  = gradl;
 kroen = eye(n_gll,n_gll);
 %%
 %Calculate the gradient operator of the test function. 4th order tensor
-%with 2 spatial components
+%with 2 spatial components. Machen Sie mich bitte effizienter.
+%Gradient operator also used for derivative operator matrix
 for p=1:n_gll
     for q = 1:n_gll
         for m=1:n_gll
             for n = 1:n_gll
                 row = (p-1)*n_gll + q;
                 col = (m-1)*n_gll + n;
-                
+
                 gradl(p,q,m,n,1) = ys(p,q)*dl(p,m)*kroen(q,n)-yr(p,q)*kroen(p,m)*dl(q,n);
                 gradl(p,q,m,n,2) = xr(p,q)*kroen(p,m)*dl(q,n)-xs(p,q)*dl(p,m)*kroen(q,n);
-                test1(row,col) = (1/dJ(p,q))*gradl(p,q,m,n,1);
-                test2(row,col) = (1/dJ(p,q))*gradl(p,q,m,n,2);
+                de{1}(row,col) = (1/dJ(p,q))*gradl(p,q,m,n,1);
+                de{2}(row,col) = (1/dJ(p,q))*gradl(p,q,m,n,2);
+
+                grad2l(p,q,m,n,1) = ys(p,q)*ddl(p,m)*kroen(q,n)-yr(p,q)*kroen(p,m)*ddl(q,n);
+                grad2l(p,q,m,n,2) = xr(p,q)*kroen(p,m)*ddl(q,n)-xs(p,q)*ddl(p,m)*kroen(q,n);
+
+                dde{1}(row,col) = (1/dJ(p,q))*grad2l(p,q,m,n,1);
+                dde{2}(row,col) = (1/dJ(p,q))*grad2l(p,q,m,n,2);
+
             end
         end
     end
@@ -65,14 +72,14 @@ for i = 1:n_gll
 end
 
 %Calculate dJ*w*cardinal for all GLL. in doubt of the addition dJ.
-% for i = 1:N+1
-%     for j = 1:N+1
-%         Ip(i,j) = cardinalP(xi,i,xi(j));
-%     end
-% end
+for i = 1:N+1
+    for j = 1:N+1
+        Ip(i,j) = cardinalP(xi,i,xi(j));
+    end
+end
 %Derivative matrix on the V-grid
-% deV{1} = 2/L1.*kron(Ip,dl);deV{2} = 2/L2.*kron(dl,Ip);
-deV{2} = test1;deV{1} = test2;
+deV{1} = 2/L1.*kron(Ip,dl);deV{2} = 2/L2.*kron(dl,Ip);
+% de{2} = test1;de{1} = test2;
 
 end
 
@@ -146,6 +153,35 @@ end
 
 dJ = xr.*ys-xs.*yr;
 end
+
+function l1 = ddlagrange(xi,N,k,i)
+%The second derivative of the kth lagrange polynomial to the ith xi.
+l1 = 0;
+l2 = 0;
+l3 = 1;
+for ii = 1:N+1
+    if ii==k
+    else
+        for jj = 1:N+1
+            if jj == ii || jj== k
+            else
+                for kk = 1:N+1
+                    if kk==ii || kk== jj || kk == k
+                    else
+                        l3 = l3*(xi(i)-xi(kk))/(xi(k)-xi(kk));
+                    end
+                end
+                l2 = l2 + 1/(xi(k)-xi(jj))*l3;
+                l3 = 1;
+            end
+        end
+        l1 = l1+1/(xi(k)-xi(ii))*l2;
+        l2 = 0;
+    end
+end
+
+end
+
 function fit = LagrangeFormInterpolation(knots,ydata,t)
 %Source: Introduction to Numerical algorithms Course @ The techical
 %University of Denmark

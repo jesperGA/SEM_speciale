@@ -6,8 +6,13 @@ mat = [1.1,1.2,1.3,1.4;
 % mat = ones([2,10]);
 % mat(2,:) = linspace(2,1e9,10);
 scale = linspace(2,1e9,10);
-GLL = 3:10:80;
+GLL = 3:4:24;
 % GLL = 1;
+subfolder = 'pics';
+% Check if the subfolder exists, if not, create it
+if ~exist(subfolder, 'dir')
+    mkdir(subfolder);
+end
 for i = 1:length(GLL)
     % i = 1;
     n_GLL = GLL(i); %Specify number of GLL points
@@ -29,8 +34,8 @@ for i = 1:length(GLL)
     [opt,study] = Assembly1bar(mesh,opt,study);
     xv = mesh.X(:,2);
     f = ones(length(xv),1)*pi;
-    quart = floor(1/4*length(xv));
-    f(quart:end-quart) = f(quart:end-quart)*scale(end);
+    % quart = floor(1/4*length(xv));
+    % f(quart:end-quart) = f(quart:end-quart)*scale(end);
 
 
 
@@ -58,10 +63,27 @@ for i = 1:length(GLL)
     hold on
 
     plot(data(:,1),data(:,2),'LineWidth',2)
+    grid on
+    ylim([-0.1,0.75])
+    xlim([0,pi])
+    
+
+    % legend("Numerical","Interpolated data")
+    title(['N = ',num2str(GLL(i))],'FontSize',25)
+    yline(0,'--k','LineWidth',2)
+    
+    ax = gca; % Get current axis
+    ax.FontSize = 25*0.8; % Set the font size for axis labels
+    % Define the subfolder and filename
+    filename = sprintf('ex_%d.eps', i);  % Using PNG format, you can change the format as needed
 
 
-    legend("Numerical","Interpolated data")
-    title(['N = ',num2str(GLL(i))])
+
+    % Full file path
+    fullFilePath = fullfile(subfolder, filename);
+
+    % Save the current figure to the specified path
+    print(gcf, fullFilePath, '-depsc');
 
 
 

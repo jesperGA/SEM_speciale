@@ -31,10 +31,12 @@ if strcmp(study.study_type,'unsteady') == 1
     study.U20 = 0;
 end
 % GLL = 4:1:14;
-GLL = 10;
+GLL = 7;
 % n_interp = 20;
 % for i = 1:numel(GLL)
 % n_GLL = GLL(i); %Specify number of GLL points
+
+defaultColors = get(groot, 'DefaultAxesColorOrder');
 for order = 1:numel(GLL)
     n_GLL = GLL(order);
 
@@ -67,7 +69,7 @@ for order = 1:numel(GLL)
     U2 = @(xx,yy) 0*xx;
     U_Tot = sqrt(U1(xx,yy).^2+U2(xx,yy).^2);
     u_mag = sqrt(u1.^2+u2.^2);
-    
+
     pGx = reshape(xxp,[2*study.n_GL,2*study.n_GL]);pGy = reshape(yyp,[2*study.n_GL,2*study.n_GL]);
     sol1 = U1(xx,yy);
     sol2 = U2(xx,yy);
@@ -79,23 +81,68 @@ for order = 1:numel(GLL)
     %     u2
     %     p];
     % P_check_vec = opt.sys_mat*u_check-opt.P;
+    counter = 1;
 
-    % for i =1:size(opt.U,2)
-    %     figure(100)
-    %     clf
-    %     % scatter3(xx,yy,opt.U(1:opt.neqnV,i),'*k')
-    %     scatter3(xxp,yyp,opt.Pr(:,i),'*k')
-    %     % plotSol2D(mesh,opt.U(1:opt.neqnV,i),opt.U(opt.neqnV+1:end,i))
-    %     % [p_gridX,p_gridY] = meshgrid(xxp,yyp);
-    %     % contour(pGx,pGy,reshape(opt.Pr(:,100),[2*study.n_GL,2*study.n_GL]));
-    %     % xlim([-1,1]);ylim([-1,1]);zlim([-1,1])
-    %     if mod(i,100) == 0
-    %         disp('Some time')
-    %     end
-    %     saveas(gcf,['misc\gif\stokes_pic',num2str(i),'.png'])
-    %     % scatter3(xx,yy,sol1,'or')
-    % 
-    % end
+    filename = 'pressure_gif.gif';
+    for i =1:size(opt.U,2)
+        figure(100)
+        clf(100)
+        % scatter3(xx,yy,opt.U(1:opt.neqnV,i),'*k')
+        scatter3(xxp,yyp,opt.Pr(:,i),'o','MarkerEdgeColor',defaultColors(5,:),'SizeData',100)
+        hold on
+        scatter3(xxp,yyp,psol,'*','MarkerEdgeColor',defaultColors(2,:),'SizeData',100)
+
+        % plotSol2D(mesh,opt.U(1:opt.neqnV,i),opt.U(opt.neqnV+1:end,i))
+        % [p_gridX,p_gridY] = meshgrid(xxp,yyp);
+        % contour(pGx,pGy,reshape(opt.Pr(:,100),[2*study.n_GL,2*study.n_GL]));
+        xlim([-1,1]);ylim([-1,1]);zlim([-1,1])
+        zlabel('$p$','Interpreter','latex')
+        xlabel('$x_1$','Interpreter','latex')
+        ylabel('$p$','Interpreter','latex')
+
+
+        % Capture the frame
+        drawnow
+        frame = getframe(100);
+        im = frame2im(frame);
+        [imind,cm] = rgb2ind(im,256);
+        % Write to the GIF File
+        if i == 1
+            imwrite(imind,cm,filename,'gif', 'Loopcount',inf,'DelayTime',0.05);
+        else
+            imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',0.05);
+        end
+
+        if mod(i,100) == 0
+            disp('Some time')
+        end
+
+        % enhance_plot(0, 30, 100, 100, 0);
+        % saveas(gcf,['misc\gif\stokes_picU1',num2str(i),'.png'])
+        if i == 1 || i ==  floor(size(opt.U,2)/10) || i == size(opt.U,2)
+            figure(99)
+            clf(99)
+            scatter3(xxp,yyp,opt.Pr(:,i),'o','MarkerEdgeColor',defaultColors(5,:),'SizeData',100)
+            hold on
+            scatter3(xxp,yyp,psol,'*','MarkerEdgeColor',defaultColors(2,:),'SizeData',100)
+
+            % plotSol2D(mesh,opt.U(1:opt.neqnV,i),opt.U(opt.neqnV+1:end,i))
+            % [p_gridX,p_gridY] = meshgrid(xxp,yyp);
+            % contour(pGx,pGy,reshape(opt.Pr(:,100),[2*study.n_GL,2*study.n_GL]));
+            xlim([-1,1]);ylim([-1,1]);zlim([-1,1])
+            zlabel('$p$','Interpreter','latex')
+            xlabel('$x_1$','Interpreter','latex')
+            ylabel('$p$','Interpreter','latex')
+
+            % enhance_plot(0, 30, 100, 100, 0);
+            % saveas(gcf,['misc\for_report\steps\stokesU1_step_pic',num2str(i),'.png'])
+            counter = counter + 1;
+            study.t(i)
+        end
+
+        % scatter3(xx,yy,sol1,'or')
+
+    end
     %
     % figure()
     % scatter3(xx,yy,u2,'*k')
@@ -122,7 +169,8 @@ for order = 1:numel(GLL)
     % end
 
 end
-
+figure(99)
+legend('SEM','Analytical','Location','south')
 A = readmatrix("Roenquist_u.csv");
 figure();semilogy(2*GLL-1,error,'-ok','LineWidth',3)
 hold on

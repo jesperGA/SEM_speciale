@@ -13,7 +13,7 @@ for i = 1:N+1
         temp = 0;
         for k = 1:N+1
 
-            if x(k)>1 && x(k)<2
+            if x(k)>0.3*pi && x(k)<0.7*pi
                 Ee = E(1);
             else
                 Ee = E(2);

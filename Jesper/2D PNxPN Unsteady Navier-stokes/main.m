@@ -22,7 +22,7 @@ if strcmp(study.solve_type,'direct') == 1
     study.direct_type = 'LU';
 
 end
-study.P_order = 'PnPn-2';
+% study.P_order = 'PnPn-2';
 study.P_order = 'PnPn';
 
 % study.solve_type = 'uzawa';
@@ -34,7 +34,7 @@ if strcmp(study.study_type,'unsteady') == 1
     study.T = 1;
     % study.nt = 1e3;
     % study.t = linspace(0,study.T,study.nt);
-    study.t = 0:1e-3:study.T;
+    study.t = 0:1e-4:study.T;
     study.nt = length(study.t);
     study.dt = (study.t(2)-study.t(1));
 
@@ -49,15 +49,16 @@ if strcmp(study.study_type,'unsteady') == 1
     study.BC_type = 'dynamic';
     % study.BC_type = 'static';
 end
-% GLL = 5:1:14;
-GLL = 8;
+% % GLL = 5:1:14;
+GLL = 3;
+order = 1;
 % n_interp = 20;
 % for i = 1:numel(GLL)
 % n_GLL = GLL(i); %Specify number of GLL points
-figure(101)
-db = readmatrix("misc\lid_benchmark.txt");
-plot(db(:,2),db(:,1),'dk','DisplayName','Benchmark')
-hold on
+% figure(101)
+% db = readmatrix("misc\lid_benchmark.txt");
+% plot(db(:,2),db(:,1),'dk','DisplayName','Benchmark')
+% hold on
 
 for order = 1:numel(GLL)
     n_GLL = GLL(order);
@@ -76,10 +77,12 @@ for order = 1:numel(GLL)
     % mesh = modify_to_roenquist_mesh(xNV,yNV,iglobV);
     mesh = modify_to_roenquist_mesh(xNV,yNV,iglobV);
     % mesh = liddriven(xNV,yNV,iglobV);
+    % mesh = displaceInternalNodes(mesh,0,-0.5);
     [iglobP, xNP,yNP] = MeshBox_mod(2,2,2,2,study.n_GL,2);
 
     mesh.IXp = iglobP;mesh.Xp = [(1:numel(xNP)).',xNP-1,yNP-1];
     mesh.pref_dof = 1;
+    % mesh_plot(mesh);
 
     %% Generate system matrices
     [opt, study] = controller(mesh, study);
