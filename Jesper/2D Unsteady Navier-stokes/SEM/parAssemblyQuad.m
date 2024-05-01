@@ -1,4 +1,4 @@
-function [opt,study] = AssemblyQuad(mesh,opt,study)
+function [opt,study] = parAssemblyQuad(mesh,opt,study)
 
 n_GLL = study.n_GLL; %Specify number of GLL points
 n_GL = study.n_GL;
@@ -64,9 +64,9 @@ Ip2 = Mh;
 Jp2 = Mh;
 
 
-ntriplets = 0;
-ntripletsP = 0;
-ntripletsP2 = 0;
+% ntriplets = 0;
+% ntripletsP = 0;
+% ntripletsP2 = 0;
 
 
 %Define GLL weights and points. Collected from study struct.
@@ -75,22 +75,64 @@ xi = study.xi;
 zeta = study.zeta;
 wp = study.wp;
 
-for e = 1:opt.nel
+IXv = mesh.IXv;
+IXp = mesh.IXp;
+Xv = mesh.Xv;
+Xp = mesh.Xp;
 
-    fprintf('Assembling element %d of %d\r', e, opt.nel);
+elementKE = cell(opt.nel, 1);
+elementME = cell(opt.nel, 1);
+elementDE1 = cell(opt.nel, 1);
+elementDE2 = cell(opt.nel, 1);
+elementMh = cell(opt.nel, 1);
+fprintf('Computing matrices')
+parfor e = 1:opt.nel
 
-    nenV = mesh.IXv(:,:,e);
+    nenV = IXv(:,:,e);
     nenV = nenV(:);
 
-    nenP = mesh.IXp(:,:,e);
+    nenP = IXp(:,:,e);
     nenP = nenP(:);
 
-    % generate edof
-    % for i = 1:length(nen)
-    %     edof(2*i-1) = 2*nen(i)-1;
-    %     edof(2*i-0) = 2*nen(i)-0;
-    % end
-    %Calculate dofs for each elements.
+    xy = Xv(nenV,2:3);
+    x = reshape(xy(:,1),Nv+1,Nv+1);
+    y = reshape(xy(:,2),Nv+1,Nv+1);
+
+    xyp = Xp(nenP,2:3);
+    xp = reshape(xyp(:,1),Np+1,Np+1);
+    yp = reshape(xyp(:,2),Np+1,Np+1);
+
+    [me,ke,deP,mhat,deV] = twoD_element_matrices(x,y,xp,yp,[],[],n_GLL,w,wp,xi,zeta);
+    elementME{e} = me;
+    elementKE{e} = ke;
+    elementDE1{e} = deP{1};
+    elementDE2{e} = deP{2};
+    elementMh{e} = mhat;
+
+    ME_loc(:,:,e) = me;
+    DE1v(:,:,e) = deV{1};
+    DE2v(:,:,e) = deV{2};
+
+end
+fprintf('- DONE\n')
+opt.ME = ME_loc;
+opt.DE1v = DE1v;
+opt.DE2v = DE2v;
+for e = 1:opt.nel
+    fprintf('Assembling element %d of %d\r', e, opt.nel);
+
+    me = elementME{e};
+    ke = elementKE{e};
+    deP{1} = elementDE1{e};
+    deP{2} = elementDE2{e};
+    mhat = elementMh{e};
+
+    nenV = IXv(:,:,e);
+    nenV = nenV(:);
+
+    nenP = IXp(:,:,e);
+    nenP = nenP(:);
+
     edofP = zeros(ldofp,1);
     indicesP = 1:length(nenP);
     edofP(indicesP) = nenP;
@@ -98,55 +140,43 @@ for e = 1:opt.nel
     edofV = zeros(ldofv,1);
     indicesV = 1:length(nenV);
     edofV(indicesV) = nenV;
-    %Find x and y for each node.
-    xy = mesh.Xv(nenV,2:3);
-    x = reshape(xy(:,1),Nv+1,Nv+1);
-    y = reshape(xy(:,2),Nv+1,Nv+1);
 
-    % x = fliplr(x);y=fliplr(y);
-    % matID = mesh.IX(e,end);
+    % Offset to start filling the arrays from the correct position
+    offset = (e - 1) * ldofv^2;
 
-    xyp = mesh.Xp(nenP,2:3);
-    xp = reshape(xyp(:,1),Np+1,Np+1);
-    yp = reshape(xyp(:,2),Np+1,Np+1);
+    % Create expanded grid indices for the current element
+    [krow, kcol] = meshgrid(1:ldofv, 1:ldofv);
+    krow = krow(:);
+    kcol = kcol(:);
+    linearIndices = sub2ind([ldofv, ldofv], krow, kcol);
 
-    [me,ke,deP,mhat,deV] = twoD_element_matrices(x,y,xp,yp,[],[],n_GLL,w,wp,xi,zeta);
-    opt.ME(:,:,e) = me;
-    opt.DE1v(:,:,e) = deV{1};
-    opt.DE2v(:,:,e) = deV{2};
+    % Compute linear indices for storage
+    indices = offset + (1:ldofv^2)';
 
+    % Assign to I, J, KE, ME
+    I(indices) = edofV(krow);
+    J(indices) = edofV(kcol);
+    KE(indices) = ke(linearIndices);
+    ME(indices) = me(linearIndices);
 
-    for krow = 1:ldofv
-        for kcol = 1:ldofv
-            ntriplets = ntriplets+1;
-            I(ntriplets) = edofV(krow);
-            J(ntriplets) = edofV(kcol);
-            KE(ntriplets) = ke(krow,kcol);
-            % mass matrix
-            ME(ntriplets) = me(krow,kcol);
+    % DE1 and DE2
+    offsetP = (e - 1) * ldofp * ldofv;
+    [prow, kcol] = meshgrid(1:ldofp, 1:ldofv);
+    indicesP = offsetP + (1:numel(prow))';
+    linearIndices = sub2ind([ldofp, ldofv], prow, kcol);
+    Ip(indicesP) = edofP(prow(:));
+    Jp(indicesP) = edofV(kcol(:));
+    DE1(indicesP) = deP{1}(linearIndices);
+    DE2(indicesP) = deP{2}(linearIndices);
 
-        end
-    end
-
-    for prow=1:ldofp
-        for kcol = 1:ldofv
-            ntripletsP =ntripletsP+1;
-            Ip(ntripletsP) = edofP(prow);
-            Jp(ntripletsP) = edofV(kcol);
-            DE1(ntripletsP) = deP{1}(prow,kcol);
-            DE2(ntripletsP) = deP{2}(prow,kcol);
-        end
-    end
-
-
-    for prow = 1:ldofp
-        for pcol = 1:ldofp
-            ntripletsP2 =ntripletsP2+1;
-            Ip2(ntripletsP2) = edofP(prow);
-            Jp2(ntripletsP2) = edofP(pcol);
-            Mh(ntripletsP2) = mhat(prow,pcol);
-        end
-    end
+    % Mh
+    offsetP2 = (e - 1) * ldofp^2;
+    [prow, pcol] = meshgrid(1:ldofp, 1:ldofp);
+    indicesP2 = offsetP2 + (1:numel(prow))';
+    linearIndices = sub2ind([ldofp, ldofp], prow, pcol);
+    Ip2(indicesP2) = edofP(prow(:));
+    Jp2(indicesP2) = edofP(pcol(:));
+    Mh(indicesP2) = mhat(linearIndices);
     clc
 end
 ind = find(I>0);

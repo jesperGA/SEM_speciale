@@ -1,6 +1,6 @@
 function [opt] = transient_solver(opt,study,mesh)
 
-pref_dof = mesh.pref_dof;
+% pref_dof = mesh.pref_dof;
 dt = study.dt;
 ndt = study.nt;
 
@@ -24,22 +24,42 @@ else
     opt.P2 = zeros(length(yy),1);
 end
 
-if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
+if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1 || strcmp(study.int_type,'BDF3EX3') == 1
     gamma = [1, 1 , 1];
     b0 = gamma(2)/gamma(1);
     a_k = gamma(3:end)./gamma(1);
     %Only for k=1 order in BDF-k [b0 = gamma(2)/gamma(1), a_k =gamma(3:end)./gamma(1)];
 
+    %Define integration variables
+    if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
+        % DEFINE BETA VARIABLES FOR BDF.
+        beta = [flip(a_k)/b0, 1/b0];
+        AB_facs = [23/12, -4/3, 5/12];
+        if isfield(mesh,'material') && length(mesh.material) >= 2
+            rho = mesh.material(1); mu = mesh.material(2);
+            H = rho*beta(end)/dt*opt.M+mu*opt.K;
+        else
+            H = beta(end)/dt*opt.M+opt.K;
+        end
+    elseif strcmp(study.int_type,'BDF3EX3') == 1
+        BF3_0 = 11/6;
+        BF3_fac = [3,-3/2, 1/3];
+        EX3_fac = [3,-3,1];
+        if isfield(mesh,'material') && length(mesh.material) >= 2
+            rho = mesh.material(1); mu = mesh.material(2);
+            H = rho*BF3_0*(1/dt)*opt.M+mu*opt.K;
+        else
+            H = BF3_0*(1/dt)*opt.M+opt.K;
+        end
+    end
+    
+    %Add brinkmann term
+    if isfield(study,'Brinkmann') && study.Brinkmann
+        body_ind = mesh.body_ind(:);
+        alpha_vec = study.alpha;
+        alpha = sparse(body_ind,body_ind,alpha_vec,opt.neqnV,opt.neqnV);
 
-    % DEFINE BETA VARIABLES FOR BDF.
-    beta = [flip(a_k)/b0, 1/b0];
-
-    AB_facs = [23/12, -4/3, 5/12];
-    if isfield(mesh,'material') && length(mesh.material) >= 2
-        rho = mesh.material(1); mu = mesh.material(2);
-        H = rho*beta(end)/dt*opt.M+mu*opt.K;
-    else
-        H = beta(end)/dt*opt.M+opt.K;
+        H = H+alpha;
     end
     %SET UP GLOBAL MATRICES FOR BCs.
     null_sys = [opt.Null1, zeros(opt.neqnV),zeros(opt.neqnV,opt.neqnP);
@@ -74,8 +94,9 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
     opt.U(:,1) = U;
     disp('Factorizing system matrix')
     tic;
-    [L,Up,Pp] = lu(sys_mat);
-    fprintf('Done factorizing. Time: %2.2f seconds\n',toc);
+    % [L,Up,Pp] = lu(sys_mat);
+    dsys_mat = decomposition(sys_mat);
+    fprintf('Done decomposotioning. Time: %2.2f seconds\n Decomp type = %s\n',toc,dsys_mat.Type);
 
 
     % fprintf('Solver status:') %For AeStheTics
@@ -86,6 +107,9 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
     IXv = mesh.IXv;ME = opt.ME;DE1v = opt.DE1v;DE2v = opt.DE2v; n_GLL = study.n_GLL;
     Cold = sparse(2*opt.neqnV+opt.neqnP,1);
     Coldold  = Cold;
+
+    Unold = zeros(2*opt.neqnV+opt.neqnP,1);Unoldold = Unold;
+    Unold(~free) = g_sys(~free);Unoldold(~free) = g_sys(~free);
     for i = 2:ndt
         %% For AeStheTics
         if mod(i,500) ==0
@@ -99,12 +123,12 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
         end
         %%
 
-        Un = [];
+        % Un = [];
         Un = [U;zeros(opt.neqnP,1)];
         if strcmp(study.int_type,'BDFk') == 1
             P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un);
 
-        else
+        elseif strcmp(study.int_type,'BDF1AB3') == 1
             C = adv_mat_assembly_mex(IXv,ME,DE1v,DE2v,n_GLL,[opt.neqnV,opt.neqnP],opt.U(:,i-1));
             % C_= adv_mat_assembly(IXv,ME,DE1v,DE2v,n_GLL,[opt.neqnV,opt.neqnP],opt.U(:,i-j));
 
@@ -116,6 +140,21 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
             else
                 P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(beta(end-1)/dt)*Un)-study.RE*CV;
             end
+
+        elseif strcmp(study.int_type,'BDF3EX3') == 1
+            C = adv_mat_assembly_mex(IXv,ME,DE1v,DE2v,n_GLL,[opt.neqnV,opt.neqnP],opt.U(:,i-1));
+            % C_= adv_mat_assembly(IXv,ME,DE1v,DE2v,n_GLL,[opt.neqnV,opt.neqnP],opt.U(:,i-j));
+
+            CV = EX3_fac(1)*C+EX3_fac(2)*Cold+EX3_fac(3)*Coldold;
+            Coldold = Cold; Cold = C;
+            
+
+            if isfield(mesh,'material') && length(mesh.material)>=2
+                P = B_mat*([opt.P1;opt.P2;zeros(opt.neqnP,1)]+(rho*beta(end-1)/dt)*Un)-rho*CV;
+            else
+                P = B_mat * ( [opt.P1;opt.P2;zeros(opt.neqnP,1)] + (1/dt) * (BF3_fac(1) * Un + BF3_fac(2) * Unold + BF3_fac(3) * Unoldold)) - study.RE*CV;
+            end
+            Unoldold = Unold;Unold = Un;
         end
 
 
@@ -133,7 +172,7 @@ if strcmp(study.int_type,'BDFk') == 1 || strcmp(study.int_type,'BDF1AB3') == 1
                 y = L\(Pp*P);
                 sol = Up\y;
             elseif strcmp(study.direct_type,'backslash') == 1
-                sol = sys_mat \ (P);
+                sol = dsys_mat \ (P);
             else
                 y = L\(Pp*P);
                 sol = Up\y;

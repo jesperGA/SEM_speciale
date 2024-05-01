@@ -1,46 +1,67 @@
-function [interp_data] = twoD_element_interpolator(mesh,mesh_interp, solution, X, Y)
+function [interp_data] = twoD_element_interpolator(mesh_data, N, u,v,p)
+% [interp_data] = twoD_element_interpolator(IX_data,X_data, mesh_interp, solution)
+% Writes datafile that can be intepreted by writenek with interpolated data.
 % Assuming solution is now a matrix with rows corresponding to elements
 % and columns to solution values at each node of the element
-IX = mesh.IX;
-interp_data = [];
-IX_interp = mesh_interp.IX;
-xG = mesh_interp.X(:,2);
-yG = mesh_interp.X(:,3);
-for e = 1:size(IX,3)
+IXv = mesh_data.IXv;
+X_data = mesh_data.Xv;
+Xp_data = mesh_data.Xp;
+IXp = mesh_data.IXp;
+
+interp_data = zeros([size(IXv,3),N^2,5]);
+
+for e = 1:size(IXv,3)
     % Extract node indices for element 'e'
-    nen = IX(:,:,e);
-    n = length(nen);
+
+    nenV = IXv(:,:,e);
+    nV = length(nenV);
 
     % Get coordinates for these nodes
-    x_data = X(nen);
-    y_data = Y(nen);
-    x_data = x_data(:);
-    y_data = y_data(:);
+    x_data = X_data(nenV,2);
+    y_data = X_data(nenV,3);
+    x_data = reshape(x_data,nV,nV);
+    y_data = reshape(y_data,nV,nV);
 
+    nenP = IXp(:,:,e);
+    nP = length(nenP);
 
-
-    nen_grid = IX_interp(:,:,e);
-    xg = xG(nen_grid);
-    yg = yG(nen_grid);
+    % Get coordinates for these nodes
+    xp_data = Xp_data(nenP,2);
+    yp_data = Xp_data(nenP,3);
+    xp_data = reshape(xp_data,nP,nP);
+    yp_data = reshape(yp_data,nP,nP);
     
-    n_grid = length(nen_grid);
+    xmax = max(X_data(nenV,2));
+    xmin = min(X_data(nenV,2));
 
-    x_grid = reshape(xg,n_grid,n_grid);
-    y_grid = reshape(yg,n_grid,n_grid);
+    ymax = max(X_data(nenV,3));
+    ymin = min(X_data(nenV,3));
 
+    xg = linspace(xmin,xmax,N);
+    yg = linspace(ymin,ymax,N);
 
-    % Define 2D grid for interpolation
-
-    % [x_grid, y_grid] = meshgrid(linspace(min(x_data), max(x_data)), ...
-    %                             linspace(min(y_data'), max(y_data')));
+    [x_grid,y_grid] = meshgrid(xg,yg);
 
     % Perform 2D interpolation
-    z_data = reshape(solution(nen, :),n,n); % Solution values at element nodes
-    z_fit = Lagrange2DInterpolation(x_data, y_data', z_data, x_grid, y_grid);
+    u_data = reshape(u(nenV, :),nV,nV); % Solution values at element nodes
+    uu = Lagrange2DInterpolation(x_data, y_data', u_data, x_grid, y_grid);
 
+    v_data = reshape(v(nenV, :),nV,nV); % Solution values at element nodes
+    vv = Lagrange2DInterpolation(x_data, y_data', v_data, x_grid, y_grid);
+
+    % Perform 2D interpolation
+    p_data = reshape(p(nenP, :),nP,nP); % Solution values at element nodes
+    pp = Lagrange2DInterpolation(xp_data, yp_data', p_data, x_grid, y_grid);
+    
     % Store interpolated values
-    interp_data{e} = [x_grid(:), y_grid(:), z_fit(:)];
+    interp_data(e,:,1) = x_grid(:)';
+    interp_data(e,:,2) = y_grid(:)';
+    interp_data(e,:,3) = uu(:)';
+    interp_data(e,:,4) = vv(:)';
+    interp_data(e,:,5) = pp(:)';
+    % interp_data{e} = [x_grid(:), y_grid(:), z_fit(:)];
 end
+
 end
 
 function z_fit = Lagrange2DInterpolation(x_data, y_data, z_data, x_grid, y_grid)

@@ -61,12 +61,13 @@ for i = 1:length(GLL)
 
     plot(xv,u,'ok','LineWidth',2);
     hold on
-
     plot(data(:,1),data(:,2),'LineWidth',2)
     grid on
     ylim([-0.1,0.75])
     xlim([0,pi])
-    
+        h = fill([0.3*pi,0.7*pi,0.7*pi,0.3*pi],[-1,-1,1,1],[0.8,0.8,0.8]);
+    set(h,'FaceAlpha',0.3)
+
 
     % legend("Numerical","Interpolated data")
     title(['N = ',num2str(GLL(i))],'FontSize',25)

@@ -12,9 +12,9 @@ addpath('misc')
 
 % mat = [1.1,1.2,1.3,1.4;
 %     1.1,1.2,1.3,1.4];
-study.p_type = 'roenquist2';
+% study.p_type = 'roenquist2';
 % study.p_type = 'bercover';
-% study.p_type = 'liddriven';
+study.p_type = 'liddriven';
 study.solve_type = 'direct'; %uzawa
 if strcmp(study.solve_type,'direct') == 1
 
@@ -40,8 +40,9 @@ if strcmp(study.study_type,'unsteady') == 1
 
     % study.int_type = 'BDFk'; %Equivalent of solving Unsteady stokes.
     study.int_type = 'BDF1AB3'; %First order bdf for linear terms. 3 order for nonlinear terms.
-    study.RE = 1;
-    study.BDF_order = 1;
+    study.int_type = 'BDF3EX3';
+    study.RE = 1000;
+    % study.BDF_order = 1;
 
     study.U10 = 0;
     study.U20 = 0;
@@ -50,7 +51,7 @@ if strcmp(study.study_type,'unsteady') == 1
     % study.BC_type = 'static';
 end
 % % GLL = 5:1:14;
-GLL = 3;
+GLL = 8;
 order = 1;
 % n_interp = 20;
 % for i = 1:numel(GLL)

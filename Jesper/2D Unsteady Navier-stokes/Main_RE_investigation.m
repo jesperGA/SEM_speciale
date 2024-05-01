@@ -18,8 +18,8 @@ study.p_type = 'liddriven';
 study.solve_type = 'direct'; %uzawa
 if strcmp(study.solve_type,'direct') == 1
 
-    % study.direct_type = 'backslash';
-    study.direct_type = 'LU';
+    study.direct_type = 'backslash';
+    % study.direct_type = 'LU';
 
 end
 % study.solve_type = 'uzawa';
@@ -34,7 +34,7 @@ if strcmp(study.study_type,'unsteady') == 1
 
 
     % study.int_type = 'BDFk'; %Equivalent of solving Unsteady stokes.
-    study.int_type = 'BDF1AB3'; %First order bdf for linear terms. 3 order for nonlinear terms.
+    study.int_type = 'BDF3EX3'; %First order bdf for linear terms. 3 order for nonlinear terms.
 
     study.BDF_order = 1;
 
@@ -52,10 +52,10 @@ p_db = benchmark2(:,3);
 % v_bench = benchmark2(:,5);
 u_db = benchmark2(:,2);
 %%
-n_GLL = 5;
+n_GLL = 12;
 
 
-RE = linspace(1,2000,10);
+% RE = linspace(1,2000,10);
 RE = 1000;
 %%
 
@@ -63,12 +63,13 @@ RE = 1000;
 [zeta,wp] = lgwt(n_GLL-2,-1,1);
 study.xi = xi;study.w = w;study.n_GLL = n_GLL;study.n_GL = n_GLL-2;
 study.zeta = zeta;study.wp = wp;
+num_el = 4;
 %% MESH
-[iglobV, xNV,yNV] = MeshBox_mod(1,1,20,20,n_GLL,1);
+[iglobV, xNV,yNV] = MeshBox_mod(1,1,num_el,num_el,n_GLL,1);
 % mesh = modify_to_bercovier(xNV,yNV,iglobV);
 % mesh = modify_to_roenquist_mesh(xNV,yNV,iglobV);
 mesh = liddriven(xNV,yNV,iglobV);
-[iglobP, xNP,yNP] = MeshBox_mod(1,1,20,20,n_GLL-2,2);
+[iglobP, xNP,yNP] = MeshBox_mod(1,1,num_el,num_el,n_GLL-2,2);
 % mesh_plot(mesh)
 
 mesh.IXp = iglobP;mesh.Xp = [(1:numel(xNP)).',xNP,yNP];
@@ -78,13 +79,13 @@ plot_ind = find(xNV == 0.5);
 %% [opt, study] = controller(mesh, study);
 
 opt = [];
-[opt,study] = AssemblyQuad(mesh,opt,study);
+[opt,study] = parAssemblyQuad(mesh,opt,study);
 
 figure(99)
 hold on
 
-dts = logspace(-6,-1,5);
-dts = [1e-6];
+% dts = logspace(-6,-1,5);
+dts = 1e-6;
 
 % p_sol = @(x,y,t) -1/4.*(cos(2.*x)+cos(2.*y)).*exp(-4.*t);
 
@@ -109,7 +110,7 @@ for i = 1:numel(dts)
     %% Analytical solution, validation and plots
     xx = mesh.Xv(:,2);yy = mesh.Xv(:,3);
     xxp = mesh.Xp(:,2);yyp = mesh.Xp(:,3);
-    fs = 18:
+    fs = 18;
     for k =1:size(opt.U,2)
         figure(2)
         clf
