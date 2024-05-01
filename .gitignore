@@ -11,6 +11,10 @@ Jesper\SEM_env
 *.asv
 *.nek5000
 *.f[0-9][0-9][0-9][0-9][0-9]
+*.svg
+*.pptx
+*.mat
+
 
 **/codegen/
 
