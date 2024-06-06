@@ -86,10 +86,10 @@ U = opt.g_sys(mesh.Xv(:,2),mesh.Xv(:,3),0);
 u2 = U(opt.neqnV+1:end);
 u1 = U(1:opt.neqnV);
 
-du1dx1_fisse = opt.DE1 * u1;
-du1dx2_fisse = opt.DE2 * u1;
-du2dx1_fisse = opt.DE1 * u2;
-du2dx2_fisse = opt.DE2 * u2;
+du1dx1_fisse = opt.D1 * u1;
+du1dx2_fisse = opt.D2 * u1;
+du2dx1_fisse = opt.D1 * u2;
+du2dx2_fisse = opt.D2 * u2;
 
 du1dx1 = @(X1,X2)  sin(X1).*sin(X2).*exp(-2*0);
 du1dx2 = @(X1,X2) -cos(X1).*cos(X2).*exp(-2*0);
@@ -102,9 +102,9 @@ du2dx1_pik = du2dx1(mesh.Xv(:,2),mesh.Xv(:,3));
 du2dx2_pik = du2dx2(mesh.Xv(:,2),mesh.Xv(:,3));
 
 figure()
-scatter3(mesh.Xv(:,2),mesh.Xv(:,3),du2dx2_fisse)
+scatter3(mesh.Xv(:,2),mesh.Xv(:,3),du1dx1_fisse,'Marker','*')
 hold on
-scatter3(mesh.Xv(:,2),mesh.Xv(:,3),du2dx2_pik)
+scatter3(mesh.Xv(:,2),mesh.Xv(:,3),du1dx1_pik)
 %%%%%%%%%%%%%%%%%%%%%%% SLET SLUT
 
 %%%%%%%%%%%%%%%%%%%%% SLET

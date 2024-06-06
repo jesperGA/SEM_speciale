@@ -1,4 +1,4 @@
-function [A, B] = elementMatrix2D(x, y, xi, w, D, N)
+function [A, B, grad1, grad2] = elementMatrix2D(x, y, xi, w, D, N)
     % elementMatrix2D: Calculate 2D element matrices A and B
     %
     % Arguments:
@@ -17,6 +17,8 @@ function [A, B] = elementMatrix2D(x, y, xi, w, D, N)
     B_4D = zeros(N + 1, N + 1, N + 1, N + 1);
     A = zeros(ldof_u, ldof_u);
     B = zeros(ldof_u, ldof_u);
+    grad1 = zeros(ldof_u, ldof_u);
+    grad2 = zeros(ldof_u, ldof_u);
 
     [xr, xs, yr, ys] = calculateDerivatives(x, y, D, N);
     J = xr .* ys - xs .* yr;
@@ -34,6 +36,8 @@ function [A, B] = elementMatrix2D(x, y, xi, w, D, N)
                     col = (m - 1) * (N + 1) + n;
                     A(row, col) = A_4D(i, j, m, n);
                     B(row, col) = B_4D(i, j, m, n);
+                    grad1(row, col) = 1/J(i,j) * grad(i, j, m, n, 1);
+                    grad2(row, col) = 1/J(i,j) * grad(i, j, m, n, 2);
                 end
             end
         end
@@ -68,8 +72,8 @@ function grad = calculateGradient(xr, xs, yr, ys, D, N)
                 for n = 1:N + 1
                     d_qn = q == n; % Kronecker delta
                     d_pm = p == m; % Kronecker delta
-                    grad(p,q,m,n,1) = ys(p,q) * D(p,m) * d_qn - yr(p,q) * d_pm * D(q,n);
-                    grad(p,q,m,n,2) = xr(p,q) * d_pm * D(q,n) - xs(p,q) * D(p,m) * d_qn;
+                    grad(p,q,m,n,1) = xr(p,q) * d_pm * D(q,n) - xs(p,q) * D(p,m) * d_qn;
+                    grad(p,q,m,n,2) = ys(p,q) * D(p,m) * d_qn - yr(p,q) * d_pm * D(q,n);
                 end
             end
         end

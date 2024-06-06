@@ -3,7 +3,8 @@ function [opt, study] = controller(mesh,study)
 opt = [];
 para_run = 1;
 try
-    gcp;
+    % error('Koer serielt')
+   gcp;
 catch
     para_run = 0;
     disp('Assembling in serial')

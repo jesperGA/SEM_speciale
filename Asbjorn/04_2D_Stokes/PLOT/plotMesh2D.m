@@ -19,8 +19,8 @@ function plotMesh2D(mesh)
     grid on;
     xticks(unique(sort(mesh.X(:, 2))));
     yticks(unique(sort(mesh.X(:, 2))));
-    xtickformat('%.2f');
-    ytickformat('%.2f');
+    xtickformat('%2f');
+    ytickformat('%2f');
     constant = 0.1;
     xlim([min(mesh.X(:,2))-constant, max(mesh.X(:,2))+constant]);
     ylim([min(mesh.X(:,3))-constant, max(mesh.X(:,3))+constant]);

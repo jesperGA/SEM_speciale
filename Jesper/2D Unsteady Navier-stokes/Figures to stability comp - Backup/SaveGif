@@ -1,0 +1,22 @@
+import imageio
+import os
+vel_images = []
+pres_images = []
+
+example = '20240527_101441_vortex20_4_N11RE0040_anis'
+vel_path = os.path.join(example, 'vel_gif')
+pres_path = os.path.join(example, 'pres_gif')
+gif_path = os.path.join(example, 'gif')
+if not os.path.exists(gif_path):
+    os.makedirs(gif_path)
+vel_filenames = os.listdir(vel_path)
+for filename in vel_filenames:
+    pic_path = os.path.join(vel_path, filename)
+    vel_images.append(imageio.imread(pic_path))
+imageio.mimsave(os.path.join(gif_path, 'examplemovie.gif'), vel_images, duration=1/25)
+
+for filename in os.listdir(pres_path):
+    pic_path = os.path.join(pres_path, filename)
+    pres_images.append(imageio.imread(pic_path))
+imageio.mimsave(os.path.join(gif_path, 'examplemovie_pres.gif'), pres_images, duration=1/25)
+

@@ -18,12 +18,12 @@ A2 = opt.LHS(opt.neqn_u+1:2*opt.neqn_u,opt.neqn_u+1:2*opt.neqn_u);
 D1 = -opt.LHS(2*opt.neqn_u+1:end,1:opt.neqn_u);
 D2 = -opt.LHS(2*opt.neqn_u+1:end,opt.neqn_u+1:2*opt.neqn_u);
 
-RHS1 = opt.RHS(1:opt.neqn_u);
-RHS2 = opt.RHS(opt.neqn_u+1:2*opt.neqn_u);
-RHS3 = opt.RHS(2*opt.neqn_u+1:end);
+Bf1 = opt.RHS(1:opt.neqn_u);
+Bf2 = opt.RHS(opt.neqn_u+1:2*opt.neqn_u);
+Fp = opt.RHS(2*opt.neqn_u+1:end);
 
 S = D1 * (A1 \ D1') + D2 * (A2 \ D2');
-RHS = - D1 * (A1 \ RHS1) - D2 * (A2 \ RHS2) - RHS3;
+RHS = - D1 * (A1 \ Bf1) - D2 * (A2 \ Bf2) - Fp;
 
 S = S/2 + S'/2;
 
@@ -32,6 +32,7 @@ p0 = zeros(opt.neqn_p,1);
 if strcmp(study.solver,'Direct')==1
 
     tic;
+    spparms('spumoni',1)
     U = opt.LHS \ (opt.RHS);
     time = toc;
     fprintf('Solution found in %f s\n',time);
@@ -42,27 +43,28 @@ if strcmp(study.solver,'Direct')==1
 
 elseif strcmp(study.solver,'pcg')==1
     
-    tol = 1e-10;
-    opt.p = pcg(S, RHS, tol, [], opt.M, [] , []);
-    opt.u1 = A1 \ (D1' * opt.p + RHS1);
-    opt.u2 = A2 \ (D2' * opt.p + RHS2);
+    tol = 1e-6;
+    opt.p = pcg(S, RHS, [], [], opt.M);
+    opt.u1 = A1 \ (D1' * opt.p + Bf1);
+    opt.u2 = A2 \ (D2' * opt.p + Bf2);
 
 elseif strcmp(study.solver,'Uzawa')==1
-    
-    [opt.p] = pcgUzawa(S, RHS, opt.M, p0, A1, A2, D1, D2);
-    opt.u1 = A1 \ (D1' * opt.p + RHS1);
-    opt.u2 = A2 \ (D2' * opt.p + RHS2);
-
+    max_iter = 50;
+    tol = 1e-12;
+    [opt.p, conv_message] = pcgUzawa(S, Bf1, Bf2, Fp, opt.M, p0, A1, A2, D1, D2, tol, max_iter);
+    opt.u1 = A1 \ (D1' * opt.p + Bf1);
+    opt.u2 = A2 \ (D2' * opt.p + Bf2);
+disp(conv_message)
 elseif strcmp(study.solver,'UzawamodJGA')==1
 
-    [opt.p] = pcg_mod(S, RHS, opt.M, p0, A1, A2, D1, D2);
-    opt.u1 = A1 \ (D1' * opt.p + RHS1);
-    opt.u2 = A2 \ (D2' * opt.p + RHS2);
+    [opt.p] = pcg_mod(S, Bf1, Bf2, Fp, opt.M, p0, A1, A2, D1, D2);
+    opt.u1 = A1 \ (D1' * opt.p + Bf1);
+    opt.u2 = A2 \ (D2' * opt.p + Bf2);
 
 end
 
-sum(abs(A1*opt.u1-D1'*opt.p-RHS1))
-sum(abs(A2*opt.u2-D2'*opt.p-RHS2))
-sum(abs(-D1*opt.u1-D2*opt.u2-RHS3))
+sum(abs(A1*opt.u1-D1'*opt.p-Bf1))
+sum(abs(A2*opt.u2-D2'*opt.p-Bf2))
+sum(abs(-D1*opt.u1-D2*opt.u2-Fp))
 
 end

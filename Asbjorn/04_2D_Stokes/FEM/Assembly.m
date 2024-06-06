@@ -10,6 +10,8 @@ function opt = Assembly(mesh, study, opt)
     % opt - Updated struct containing assembled matrices and vectors
     % opt.K, opt.M, opt.C, opt.Null, opt.P
 
+    N = study.N;
+
     %% Global numbers (for safe keeping)
     opt.nel = size(mesh.IX, 3);
     opt.neqn_u = size(mesh.X, 1);
@@ -32,29 +34,48 @@ function opt = Assembly(mesh, study, opt)
     opt.f_u2 = study.F2(mesh.X(:,2),mesh.X(:,3));
 
     %% MATRICES (STIFFNESS and MASS)
-    ldof = (study.N + 1) ^ 2;
+    ldof = (N + 1) ^ 2;
 
     % Initialize arrays for triplets
     [I, J, AE, BE, ntriplets] = initializeTriplets(opt, ldof);
+    [I, J, grad1E, grad2E, ntriplets] = initializeTriplets(opt, ldof);
+
 
     % Loop over elements and integrate
     for e = 1:opt.nel
         % Get element data
         [xy, edof] = getElementData(mesh.X, mesh.IX, e);
 
-        % Calculate element matrices
-        [A, B] = calculateElementMatrices(xy, study.N);
+        [xi, w, h] = GetGLL(N + 1);
 
-        % Add to global system
-        [I, J, AE, BE, ntriplets] = addToGlobalSystem(A, B, edof, I, J, AE, BE, ntriplets, ldof);
+        x = reshape(xy(:, 1), N + 1, N + 1);
+        y = reshape(xy(:, 2), N + 1, N + 1);
+    
+        [A, B, grad1, grad2] = elementMatrix2D(x, y, xi, w, h, N);
+
+        for krow = 1:ldof
+            for kcol = 1:ldof
+                ntriplets = ntriplets + 1;
+                I(ntriplets) = edof(krow);
+                J(ntriplets) = edof(kcol);
+                AE(ntriplets) = A(krow, kcol);
+                BE(ntriplets) = B(krow, kcol);
+                grad1E(ntriplets) = grad1(krow, kcol);
+                grad2E(ntriplets) = grad2(krow, kcol);
+            end
+        end
     end
 
     % Assemble global matrices
-    opt = assembleGlobalMatrices(I, J, AE, BE, opt, ntriplets);
+    ind = find(I > 0);
+    opt.A = sparse(I(ind), J(ind), AE(ind), opt.neqn_u, opt.neqn_u);
+    opt.B = sparse(I(ind), J(ind), BE(ind), opt.neqn_u, opt.neqn_u);
+    opt.grad1 = sparse(I(ind), J(ind), grad1E(ind), opt.neqn_u, opt.neqn_u);
+    opt.grad2 = sparse(I(ind), J(ind), grad2E(ind), opt.neqn_u, opt.neqn_u);
 
     %% Coupling MATRICES (D1,D2)
-    ldof_u = (study.N + 1) ^ 2;
-    ldof_p = (study.N-2 + 1) ^ 2;
+    ldof_u = (N + 1) ^ 2;
+    ldof_p = (N-2 + 1) ^ 2;
 
     % Initialize arrays for triplets
     % Zero the arrays for the triplets
@@ -64,8 +85,8 @@ function opt = Assembly(mesh, study, opt)
     DE2 = zeros(opt.nel*ldof_u*ldof_p,1);
     ntriplets = 0;
 
-    [xi, w] = lglnodes(study.N); % Legendre-Gauss-Lobatto nodes and weights
-    [xi_gl,w_gl]=lgwt(study.N-2+1,-1,1); 
+    [xi, w] = lglnodes(N); % Legendre-Gauss-Lobatto nodes and weights
+    [xi_gl,w_gl]=lgwt(N-2+1,-1,1); 
 
     % Loop over elements and integrate
     for e = 1:opt.nel
@@ -74,7 +95,7 @@ function opt = Assembly(mesh, study, opt)
         [~,    edof_p] = getElementData(mesh.Xp, mesh.IXp, e);
 
         % Calculate coupling matrices
-        [D1, D2] = calculateDMatrices(xy_u, study.N, xi, w, xi_gl, w_gl);
+        [D1, D2] = calculateDMatrices(xy_u, N, xi, w, xi_gl, w_gl);
 
         % add to global system
         for krow = 1:ldof_p
@@ -94,7 +115,7 @@ function opt = Assembly(mesh, study, opt)
 
 
     %% Precondition Matrix (Pressure mesh mass matrix)
-    ldof = (study.N - 2 + 1) ^ 2;
+    ldof = (N - 2 + 1) ^ 2;
 
     % Initialize arrays for triplets
     [I, J, ME, ~, ntriplets] = initializeTriplets(opt, ldof);
@@ -109,9 +130,9 @@ function opt = Assembly(mesh, study, opt)
         % Get element data
         [xy, edof] = getElementData(mesh.Xp, mesh.IXp, e);
 
-        [~, w]=lgwt(study.N + 1 - 2,-1,1); 
+        [~, w]=lgwt(N + 1 - 2,-1,1); 
 
-        [M] = preCondMatr(w, study.N-2, L1, L2);
+        [M] = preCondMatr(w, N-2, L1, L2);
 
         % add to global system (I,J,[SE])
         for krow = 1:ldof_p
@@ -172,35 +193,6 @@ function [xy, edof] = getElementData(X, IX, e)
     nen = IX(:,:,e);
     xy = X(nen, 2:3);
     edof = reshape(nen, [], 1);
-end
-
-function [A, B] = calculateElementMatrices(xy, N)
-    
-    [xi, w, h] = GetGLL(N + 1);
-
-    x = reshape(xy(:, 1), N + 1, N + 1);
-    y = reshape(xy(:, 2), N + 1, N + 1);
-    
-    [A, B] = elementMatrix2D(x, y, xi, w, h, N);
-    
-end
-
-function [I, J, AE, BE, ntriplets] = addToGlobalSystem(A, B, edof, I, J, AE, BE, ntriplets, ldof)
-    for krow = 1:ldof
-        for kcol = 1:ldof
-            ntriplets = ntriplets + 1;
-            I(ntriplets) = edof(krow);
-            J(ntriplets) = edof(kcol);
-            AE(ntriplets) = A(krow, kcol);
-            BE(ntriplets) = B(krow, kcol);
-        end
-    end
-end
-
-function opt = assembleGlobalMatrices(I, J, AE, BE, opt, ntriplets)
-    ind = find(I > 0);
-    opt.A = sparse(I(ind), J(ind), AE(ind), opt.neqn_u, opt.neqn_u);
-    opt.B = sparse(I(ind), J(ind), BE(ind), opt.neqn_u, opt.neqn_u);
 end
 
 function opt = applyBoundaryConditions(opt)

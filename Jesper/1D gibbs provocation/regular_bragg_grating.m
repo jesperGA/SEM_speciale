@@ -1,7 +1,7 @@
 function mesh = regular_bragg_grating (L,N,gll,mat,study)
 %mesh = regular_bragg_grating (L,N,mat)
 % Generates mesh file for a bragg grate of L length that contains N number
-% of elements. With material alternating for each element.
+% of nodes. With material alternating for each element.
 nn = (N-1)*(gll-1)+1;
 X = zeros(nn,2); %Generate nodes
 X(:,1) = 1:nn;

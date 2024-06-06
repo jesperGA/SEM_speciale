@@ -33,13 +33,14 @@ for k = 1:numel(T)
     i = T(k);
     count = counter(i);
     time = t(i);
-    filename = sprintf('%s_anis\\%s%1d.f%05d',fname,fname,0,count);
-    [data_interp] = twoD_element_interpolator(mesh,N_interp,U(1:neqnV,i),U(neqnV+1:end,i),Pr(:,i));
-    flag = writenek(filename,data_interp,[N_interp,N_interp,1],1:nel,time,i,'XUP','le',4,6.54321);
+    filename = sprintf('%s%1d.f%05d',fname,0,count);
+    full_path = fullfile(folderName,filename);
+    [data_interp] = twoD_element_interpolator(mesh,N_interp,U(1:neqnV,k),U(neqnV+1:end,k),Pr(:,k));
+    flag = writenek(full_path,data_interp,[N_interp,N_interp,1],1:nel,time,i,'XUP','le',4,6.54321);
 
     if flag~=0
         fprintf('Writenek failed for timestep %d',i)
     end
 end
-
+fprintf('\n Done saving animation')
 end

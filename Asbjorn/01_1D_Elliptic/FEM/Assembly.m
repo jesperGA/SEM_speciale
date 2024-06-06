@@ -68,6 +68,9 @@ ind = find(I>0);
 opt.A = sparse(I(ind),J(ind),AE(ind),opt.neqn,opt.neqn);
 opt.B = sparse(I(ind),J(ind),BE(ind),opt.neqn,opt.neqn);
 
+opt.A_noBCs = opt.A;
+opt.B_noBCs = opt.B;
+
 % Modidy for BCs
 opt.A = opt.Null'*opt.A*opt.Null - (opt.Null-speye(opt.neqn,opt.neqn));
 opt.B = opt.Null'*opt.B*opt.Null;

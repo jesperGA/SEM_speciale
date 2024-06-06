@@ -14,11 +14,10 @@ function [mesh] = mesh2D(LX, LY, NELX, NELY, N)
     node_coordinates = [x, y];
 
     % Adjust y-coordinates
-    element_nodes = [mesh.IX(:, :, 3), mesh.IX(:, :, 4)];
+    element_nodes = [mesh.IX(:, :, 3) mesh.IX(:, :, 4)];
     xx = node_coordinates(element_nodes, 1);
     yy = node_coordinates(element_nodes, 2);
     ratios = 1 + 1/4 * sinpi(xx(yy == 1)) ./ (1/2);
-    % ratios(end/2+1:end)= ratios(end/2:-1:1);
     for i = NGLL:-1:1
         yy(yy == yy(i * N + 1)) = 1/2 + (yy(yy == yy(i * N + 1)) - 1/2) .* ratios;    
     end

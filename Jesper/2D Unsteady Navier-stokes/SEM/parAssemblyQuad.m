@@ -53,6 +53,8 @@ I = zeros(opt.nel*ldofv*ldofv,1);
 J = zeros(opt.nel*ldofv*ldofv,1);
 KE = zeros(opt.nel*ldofv*ldofv,1);
 ME = zeros(opt.nel*ldofv*ldofv,1);
+D1_mat = zeros(opt.nel*ldofv*ldofv,1);
+D2_mat = zeros(opt.nel*ldofv*ldofv,1);
 
 Ip = zeros(opt.nel*ldofv*ldofp,1);
 Jp = zeros(opt.nel*ldofv*ldofp,1);
@@ -85,6 +87,7 @@ elementME = cell(opt.nel, 1);
 elementDE1 = cell(opt.nel, 1);
 elementDE2 = cell(opt.nel, 1);
 elementMh = cell(opt.nel, 1);
+dJ_mat = zeros([n_GLL,n_GLL,opt.nel]);
 fprintf('Computing matrices')
 parfor e = 1:opt.nel
 
@@ -102,7 +105,7 @@ parfor e = 1:opt.nel
     xp = reshape(xyp(:,1),Np+1,Np+1);
     yp = reshape(xyp(:,2),Np+1,Np+1);
 
-    [me,ke,deP,mhat,deV] = twoD_element_matrices(x,y,xp,yp,[],[],n_GLL,w,wp,xi,zeta);
+    [me,ke,deP,mhat,deV,dJ] = twoD_element_matrices(x,y,xp,yp,[],[],n_GLL,w,wp,xi,zeta);
     elementME{e} = me;
     elementKE{e} = ke;
     elementDE1{e} = deP{1};
@@ -112,12 +115,14 @@ parfor e = 1:opt.nel
     ME_loc(:,:,e) = me;
     DE1v(:,:,e) = deV{1};
     DE2v(:,:,e) = deV{2};
+    dJ_mat(:,:,e) = dJ;
 
 end
 fprintf('- DONE\n')
 opt.ME = ME_loc;
 opt.DE1v = DE1v;
 opt.DE2v = DE2v;
+opt.dJ = dJ_mat;
 for e = 1:opt.nel
     fprintf('Assembling element %d of %d\r', e, opt.nel);
 
@@ -126,6 +131,9 @@ for e = 1:opt.nel
     deP{1} = elementDE1{e};
     deP{2} = elementDE2{e};
     mhat = elementMh{e};
+
+    D1 = DE1v(:,:,e);
+    D2 = DE2v(:,:,e);
 
     nenV = IXv(:,:,e);
     nenV = nenV(:);
@@ -158,6 +166,8 @@ for e = 1:opt.nel
     J(indices) = edofV(kcol);
     KE(indices) = ke(linearIndices);
     ME(indices) = me(linearIndices);
+    D1_mat(indices) = D1(linearIndices);
+    D2_mat(indices) = D2(linearIndices);
 
     % DE1 and DE2
     offsetP = (e - 1) * ldofp * ldofv;
@@ -184,6 +194,8 @@ indp = find(Ip>0);
 indp2 = find(Ip2>0);
 opt.K = sparse(I(ind),J(ind),KE(ind),opt.neqnV,opt.neqnV);
 opt.M = sparse(I(ind),J(ind),ME(ind),opt.neqnV,opt.neqnV);
+opt.D1 = sparse(I(ind),J(ind),D1_mat(ind),opt.neqnV,opt.neqnV);
+opt.D2 = sparse(I(ind),J(ind),D2_mat(ind),opt.neqnV,opt.neqnV);
 % opt.P = sparse(opt.neqnV,1);
 opt.DE1 = sparse(Ip(indp),Jp(indp),DE1(indp),opt.neqnP,opt.neqnV);
 opt.DE2 = sparse(Ip(indp),Jp(indp),DE2(indp),opt.neqnP,opt.neqnV);

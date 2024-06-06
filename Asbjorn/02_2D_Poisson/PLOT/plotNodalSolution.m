@@ -1,5 +1,5 @@
 function plotNodalSolution(F,X,U)
-    figure()
+    % figure()
     % Plot convergence
     fntsize = 18;
     defaultColors = get(groot, 'DefaultAxesColorOrder');

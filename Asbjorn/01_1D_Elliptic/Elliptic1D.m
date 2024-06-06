@@ -15,7 +15,7 @@ study.p = 1;
 % Call the mesh routine 
 L = pi;
 ne = 2;
-for i = 1:15
+for i =1:15
     study.N = i;
     if study.N==1
         study.etype = 'Linear';
@@ -57,8 +57,8 @@ for i = 1:15
     dofs(i) = study.N*2+1;
 end
 
-figure()
-semilogy(dofs,norme,'o')
+% figure()
+% semilogy(dofs,norme,'o')
 
 % Mindste kvadraters metode
 x=[dofs(3:end)]';
@@ -67,9 +67,9 @@ A=[x.^0,dofs(3:end)'];
 c = (A'*A)\(A'*y);
 
 
-hold on
-semilogy(dofs(3:end),10.^(c(2).*dofs(3:end)+c(1)))
-enhance_plot(0,0,0,0,0)
+% hold on
+% semilogy(dofs(3:end),10.^(c(2).*dofs(3:end)+c(1)))
+% enhance_plot(0,0,0,0,0)
 
 
 
@@ -78,22 +78,48 @@ plotNodalSolution(F,mesh.X,opt.U)
 
 p1 = polyfit((dofs(3:end)),log10(norme(3:end)),1);
 
+% 
+% figure()
+% semilogy(dofs,norme,'o')
+% hold off
+% grid on
 
-figure()
-semilogy(dofs,norme,'o')
-hold off
-grid on
-
-for k=5:11
-q=log((norme(k+1)-norme(k))/(norme(k)-norme(k-1)))/log((norme(k)-norme(k-1))/(norme(k-1)-norme(k-2)));
-end
-
-for i=3:11
-    seq(i)=norme(i+1)/norme(i);
-end
-plot(seq)
-ylim([0 1])
+% for k=5:11
+% q=log((norme(k+1)-norme(k))/(norme(k)-norme(k-1)))/log((norme(k)-norme(k-1))/(norme(k-1)-norme(k-2)));
+% end
+% 
+% for i=3:11
+%     seq(i)=norme(i+1)/norme(i);
+% end
+% plot(seq)
+% ylim([0 1])
 
 plotConvergence(norme,dofs)
 
 plotMeshh(mesh)
+
+% figure
+% hold on
+% for i=1:2
+% plot(opt.elementX(i,:),opt.elementSolution(i,:))
+% end
+
+% Plot the sparsity pattern of the matrix
+figure;
+spy(opt.A_noBCs, 25); % 'k' specifies the color black, and 25 is the marker size
+% title('Sparsity Pattern of Matrix A');
+% xlabel('DoF Index');
+% ylabel('DoF Index');
+axis off
+enhance_plot(0, 22, 0, 15, 0);
+saveas(gcf,'Sparcity_pattern_A','epsc')
+
+% Plot the sparsity pattern of the matrix
+figure;
+spy(opt.B_noBCs, 25); % 'k' specifies the color black, and 25 is the marker size
+% title('Sparsity Pattern of Matrix B');
+% xlabel('DoF Index');
+% ylabel('DoF Index');
+axis off
+enhance_plot(0, 22, 0, 15, 0);
+saveas(gcf,'Sparcity_pattern_B','epsc')

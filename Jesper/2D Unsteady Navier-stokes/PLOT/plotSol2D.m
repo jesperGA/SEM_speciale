@@ -46,7 +46,7 @@ end
 
 axis off
 hold on
-scale_factor = 'off'; % Adjust the scale factor as needed
+scale_factor = 1; % Adjust the scale factor as needed
 if flag ==0
     quiver(mesh.Xv(:,2), mesh.Xv(:,3), u1, u2, scale_factor, 'Color', defaultColors(1,:),'LineWidth',1.5)
 else

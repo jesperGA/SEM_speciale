@@ -12,14 +12,14 @@ addpath('misc')
 %%
 % mat = [1.1,1.2,1.3,1.4;
 %     1.1,1.2,1.3,1.4];
-% study.p_type = 'roenquist2';
+study.p_type = 'roenquist2';
 % study.p_type = 'bercover';
-study.p_type = 'liddriven';
+% study.p_type = 'liddriven';
 study.solve_type = 'direct'; %uzawa
 if strcmp(study.solve_type,'direct') == 1
 
-    % study.direct_type = 'backslash';
-    study.direct_type = 'LU';
+    study.direct_type = 'backslash';
+    % study.direct_type = 'LU';
 
 end
 %%
@@ -38,7 +38,7 @@ if strcmp(study.study_type,'unsteady') == 1
 
     % study.int_type = 'BDFk'; %Equivalent of solving Unsteady stokes.
     study.int_type = 'BDF3EX3'; %First order bdf for linear terms. 3 order for nonlinear terms.
-    study.RE = 1000;
+    study.RE = 1;
     study.BDF_order = 1;
 
     study.U10 = 0;
@@ -47,9 +47,10 @@ if strcmp(study.study_type,'unsteady') == 1
     study.BC_type = 'dynamic';
     % study.BC_type = 'static';
 end
+study.Brinkmann = 0;
 %%
 % GLL = 3:1:10;
-GLL = 14;
+GLL = 6;
 % n_interp = 20;
 % for i = 1:numel(GLL)
 % n_GLL = GLL(i); %Specify number of GLL points
@@ -71,18 +72,19 @@ for order = 1:numel(GLL)
     study.xi = xi;study.w = w;study.n_GLL = n_GLL;study.n_GL = n_GLL-2;
     study.zeta = zeta;study.wp = wp;
     %% MESH
-    [iglobV, xNV,yNV] = MeshBox_mod(5,5,1,1,n_GLL,1);
+    [iglobV, xNV,yNV] = MeshBox_mod(2,2,2,2,n_GLL,1);
     % mesh = modify_to_bercovier(xNV,yNV,iglobV);
     % mesh = modify_to_roenquist_mesh(xNV,yNV,iglobV);
-    % mesh = modify_to_roenquist_mesh(xNV,yNV,iglobV);
-    mesh = liddriven(xNV,yNV,iglobV);
-    [iglobP, xNP,yNP] = MeshBox_mod(5,5,1,1,study.n_GL,2);
+    mesh = modify_to_roenquist_mesh(xNV,yNV,iglobV);
+    % mesh = liddriven(xNV,yNV,iglobV);
+    [iglobP, xNP,yNP] = MeshBox_mod(2,2,2,2,study.n_GL,2);
 
-    mesh.IXp = iglobP;mesh.Xp = [(1:numel(xNP)).',xNP,yNP];
+    mesh.IXp = iglobP;mesh.Xp = [(1:numel(xNP)).',xNP-1,yNP-1];
     mesh.pref_dof = 1;
 
     %% Generate system matrices
     [opt, study] = controller(mesh, study);
+    obj_fun(opt,study.t,1,mesh.IXv,mesh.Xv,study.w);
     %Def P/force vector:
     u1 = opt.U(1:opt.neqnV);u2 = opt.U(opt.neqnV+1:2*opt.neqnV);p = opt.U(opt.neqnV*2+1:end);
 

@@ -48,7 +48,7 @@ function plotMesh2Droenquistex(mesh)
         
     end
     plot(linspace(0,1), 1+1/4*sinpi(linspace(0,1)), 'k');
-    plot([0 0 0.5 0.5 0.5 0.5 1 1 1 0 0], [1 0.5 0.5 1.25 0 0.5 0.5 1 0 0 0.5], 'k');
+    plot([0 0 0.5 0.5 0.5 0.5 0.5 1 1 1 0 0], [1 0.5 0.5 0 1.25 0.5 0.5 0.5 1 0 0 0.5], 'k');
 
     text(1,1.3, '{\it x_2} = 1 + 1/4 sin{\it \pi x_1}', ...
             'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', ...

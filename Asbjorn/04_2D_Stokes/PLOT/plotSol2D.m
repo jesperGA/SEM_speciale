@@ -20,8 +20,8 @@ function plotSol2D(mesh,opt)
     grid on;
     xticks(unique(sort(mesh.X(:, 2))));
     yticks(unique(sort(mesh.X(:, 2))));
-    xtickformat('%.2f');
-    ytickformat('%.2f');
+    xtickformat('%2f');
+    ytickformat('%2f');
     constant = 0.1;
     xlim([min(mesh.X(:,2))-constant, max(mesh.X(:,2))+constant]);
     ylim([min(mesh.X(:,3))-constant, max(mesh.X(:,3))+constant]);
@@ -49,5 +49,5 @@ function plotSol2D(mesh,opt)
     scale_factor = 2; % Adjust the scale factor as needed
     quiver(mesh.X(:,2), mesh.X(:,3), opt.u1, opt.u2, scale_factor, 'Color', defaultColors(1,:))
     enhance_plot(0, 0, 0.5, 6, 0);
-    saveas(gcf,'quiver','epsc')
+    saveas(gcf,'Figures\quiver','epsc')
 end

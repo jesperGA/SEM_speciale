@@ -1,8 +1,8 @@
-function [Cv] = adv_mat_assembly(IXv,ME,DE1v,DE2v,n_GLL,neqn,U)
+function [Cv] = adv_mat_assembly(IXv, ME_DE1, ME_DE2,n_GLL,neqn,U,S)
 neqnV = neqn(1);
 neqnP = neqn(2);
 
-nel = size(ME,3);
+nel = size(ME_DE1,3);
 
 ldof = (n_GLL)^2;
 
@@ -24,22 +24,21 @@ for e = 1:nel
 
     v1 = sparse(1:ldof,1:ldof,U1(edof),ldof,ldof);
     v2 = sparse(1:ldof,1:ldof,U2(edof),ldof,ldof);
-    
-    me = ME(:,:,e);
-    de1 = DE1v(:,:,e);
-    de2 = DE2v(:,:,e);
 
-    ce = me*(v1*de1+v2*de2);
-    
-    for krow = 1:ldof
-        for kcol = 1:ldof
-            ntriplets = ntriplets+1;
-            I(ntriplets) = edof(krow);
-            J(ntriplets) = edof(kcol);
-            CE(ntriplets) = ce(krow,kcol);
+    ce = v1 * ME_DE1(:,:,e) + v2 * ME_DE2(:,:,e);
 
-        end
-    end
+    % Create all combinations of krow and kcol
+    [krow, kcol] = meshgrid(1:ldof, 1:ldof);
+    krow = krow(:);
+    kcol = kcol(:);
+
+    % Vectorize the assignment to I, J, CE
+    I(ntriplets+1:ntriplets+ldof^2) = edof(krow);
+    J(ntriplets+1:ntriplets+ldof^2) = edof(kcol);
+    CE(ntriplets+1:ntriplets+ldof^2) = ce(sub2ind([ldof, ldof], krow, kcol));
+
+    % Update ntriplets
+    ntriplets = ntriplets + ldof^2;
 
 end
 ind = find(I>0);

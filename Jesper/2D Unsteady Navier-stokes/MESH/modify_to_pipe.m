@@ -1,4 +1,4 @@
-function mesh = modify_to_pipe(h,L,mesh,V0,element_to_remove)
+function mesh = modify_to_pipe(h,L,mesh,V0,element_to_remove,fully)
 %mesh = modify_to_pipe(h,L,mesh,V0,element_to_remove)
 %Removes elements between 2<=x<=2.5 and 0<=y<=0.5
 %Find elements:
@@ -50,8 +50,14 @@ south_bound = mesh.Xv(y==0,1);
 
 
 %Boundaries on west FOR V1:
-
-west_bound_mat = [west_bound(:),ones(numel(west_bound),1),repmat(V0,numel(west_bound),1)];
+if ~fully
+    west_bound_mat = [west_bound(:),ones(numel(west_bound),1),repmat(V0,numel(west_bound),1)];
+elseif fully
+    umax = 3/2*V0;
+    R = h/2; r = linspace(0,2*R,numel(west_bound));
+    U = umax.*(1-((r-R)/R).^2);
+    west_bound_mat = [west_bound(:),ones(numel(west_bound),1),U'];
+end
 south_bound_mat = [south_bound(:),ones(numel(south_bound),1),zeros(numel(south_bound),1)];
 north_bound_mat = [north_bound(:),ones(numel(north_bound),1),zeros(numel(north_bound),1)];
 indent_bound_mat = [newBC,ones(numel(newBC),1),zeros(numel(newBC),1)];

@@ -22,7 +22,7 @@ examples = {'Roenquist','Roenquist_Poisson','Bercovier_1','Bercovier_2'};
 study.example = examples{1};
 
 % Loop through polynomial orders
-polOrders = 10:10;
+polOrders = 3:10;
 
 %-------------------------------------------------------------------------%
 %                             Physical domain and meshing                 %
@@ -79,6 +79,9 @@ for i = polOrders
     % Generate mesh
     [mesh] = meshStaggered(study, LX, LY, NELX, NELY, study.N);
 
+    plotMesh2Droenquistex(mesh)
+    % saveas(gcf,'Figures\2DmeshPNPN','epsc')
+
     % Apply boundary conditions
     [mesh] = boundaryConditions(study, mesh, NELX, NELY, study.U1, study.U2, study.P);
 
@@ -110,22 +113,22 @@ end
 % plotMesh2D(mesh)
 if strcmp(study.example,'Roenquist')
     plotMesh2Droenquistex(mesh)
-    saveas(gcf,'2Dmesh','epsc')
+    saveas(gcf,'Figures\2Dmesh','epsc')
 elseif strcmp(study.example,'Bercovier_1')
     plotMesh2DBercovierex(mesh)
     legend off
-    saveas(gcf,'2DmeshBercovier_1','epsc')
+    saveas(gcf,'Figures\2DmeshBercovier_1','epsc')
 end
-plotNodalSolution(study.P,mesh.Xp,opt.p,'$p$')
-legend('SEM','Analytical','Location','northeast')
-saveas(gcf,['NodalSol_$p$'],'epsc')
-plotNodalSolution(study.U1,mesh.X,opt.u1,'$u_1$')
-plotNodalSolution(study.U2,mesh.X,opt.u2,'$u_2$')
-if strcmp(study.example,'Roenquist')
-    zlim([-1 1])
-end
-legend('SEM','Analytical','Location','northeast')
-saveas(gcf,['NodalSol_','$u_2$'],'epsc')
+% plotNodalSolution(study.P,mesh.Xp,opt.p,'$p$')
+% legend('SEM','Analytical','Location','northeast')
+% saveas(gcf,'Figures\NodalSol_$p$','epsc')
+% plotNodalSolution(study.U1,mesh.X,opt.u1,'$u_1$')
+% plotNodalSolution(study.U2,mesh.X,opt.u2,'$u_2$')
+% if strcmp(study.example,'Roenquist')
+%     zlim([-1 1])
+% end
+% legend('SEM','Analytical','Location','northeast')
+% saveas(gcf,['Figures\NodalSol_','$u_2$'],'epsc')
 
 
 % plotSol2D(mesh,opt)
@@ -149,7 +152,7 @@ if strcmp(study.example,'Roenquist')
     legend('$\left\|u-u_h\right\|_{L^{\infty}, GL}$ - Our Results','$\left\|u-u_h\right\|_{L^{\infty}, GL}$ - R\o nquist ','$\left\|p-p_h\right\|_{L^{\infty}, G}$ - Our Results','$\left\|p-p_h\right\|_{L^{\infty}, G}$ - R\o nquist ', ...
         'Interpreter', 'latex', 'FontSize', 18, 'Location','southwest' )
     enhance_plot(0, 20, 0, 0, 0);
-    saveas(gcf,'convergence','epsc')
+    saveas(gcf,'Figures\convergence','epsc')
 elseif strcmp(study.example,'Bercovier_1')
     fig = figure;
     fig.Position = [744 636.2000 560 441.8000];
@@ -168,5 +171,5 @@ elseif strcmp(study.example,'Bercovier_1')
     % legend('$\left\|u-u_h\right\|_{L^{\infty}, GL}$ - Our Results','$\left\|u-u_h\right\|_{L^{\infty}, GL}$ - R\o nquist ','$\left\|p-p_h\right\|_{L^{\infty}, G}$ - Our Results','$\left\|p-p_h\right\|_{L^{\infty}, G}$ - R\o nquist ', ...
     %     'Interpreter', 'latex', 'FontSize', 18, 'Location','southwest' )
     enhance_plot(0, 20, 0, 0, 0);
-    saveas(gcf,'convergence_Bercovier_1','epsc')
+    saveas(gcf,'Figures\convergence_Bercovier_1','epsc')
 end

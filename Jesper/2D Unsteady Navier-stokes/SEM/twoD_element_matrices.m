@@ -1,6 +1,5 @@
-function [me,ke,de,mhat,deV] = twoD_element_matrices(x,y,xp,yp,E,dens,n_gll,w,wp,xi,zeta)
+function [me,ke,de,mhat,deV,dJ] = twoD_element_matrices(x,y,xp,yp,E,dens,n_gll,w,wp,xi,zeta)
 
-% ldof = numel(x);
 
 ke = zeros([n_gll*n_gll,n_gll*n_gll]);
 me = ke; %de{1} = ke;de{2} = ke;
@@ -16,6 +15,8 @@ N_gl = numel(wp);
 mhat = zeros(N_gl,N_gl);
 % Calc all langragian derivatives: MAYBE CALCULATE EVEN FURTHER BACK? iS
 % THE SAME FOR ALL ELEMENTS.
+dl = zeros(N+1,N+1);
+Ip = zeros(N+1,N+1);
 for i = 1:N+1
     for j = 1:N+1
         dl(i,j) = dlagrange(xi,N,j,i);
@@ -34,8 +35,13 @@ for p=1:n_gll
     for q = 1:n_gll
         for m=1:n_gll
             for n = 1:n_gll
+                row = (p-1)*n_gll + q;
+                col = (m-1)*n_gll + n;
+
                 gradl(p,q,m,n,1) = ys(p,q)*dl(p,m)*kroen(q,n)-yr(p,q)*kroen(p,m)*dl(q,n);
                 gradl(p,q,m,n,2) = xr(p,q)*kroen(p,m)*dl(q,n)-xs(p,q)*dl(p,m)*kroen(q,n);
+                deV{2}(row,col) = (1/dJ(p,q))*gradl(p,q,m,n,1);
+                deV{1}(row,col) = (1/dJ(p,q))*gradl(p,q,m,n,2);
             end
         end
     end
@@ -66,13 +72,14 @@ for i = 1:N+1
     end
 end
 %Derivative matrix on the V-grid
-deV{1} = 2/L1.*kron(Ip,dl);deV{2} = 2/L2.*kron(dl,Ip);
+% deV{1} = 2/L1.*kron(Ip,dl);deV{2} = 2/L2.*kron(dl,Ip);
 
 
 %%
 %CALCULATE dlP, the derivative of the lagrange polynomial from v in the p
 %grid.
 % LagrangeFormInterpolation(x_data,y_data,x_fit);
+I_tilde = zeros(N_gl,N+1); dlP = zeros(N_gl,N+1);
 for i =1:N+1
     for j=1:N_gl
         I_tilde(j,i) = wp(j).*cardinalP(xi,i,zeta(j));

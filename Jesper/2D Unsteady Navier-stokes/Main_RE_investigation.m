@@ -63,7 +63,7 @@ RE = 1000;
 [zeta,wp] = lgwt(n_GLL-2,-1,1);
 study.xi = xi;study.w = w;study.n_GLL = n_GLL;study.n_GL = n_GLL-2;
 study.zeta = zeta;study.wp = wp;
-num_el = 4;
+num_el = 2;
 %% MESH
 [iglobV, xNV,yNV] = MeshBox_mod(1,1,num_el,num_el,n_GLL,1);
 % mesh = modify_to_bercovier(xNV,yNV,iglobV);
