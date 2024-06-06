@@ -15,8 +15,8 @@ Jesper\SEM_env
 *.pptx
 *.mat
 *.pvsm
-*.
 *.mw
+*.vtk
 
 **/codegen/
 
